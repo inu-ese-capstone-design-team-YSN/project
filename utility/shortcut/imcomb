@@ -1,0 +1,42 @@
+#!/bin/bash
+
+mode=0
+
+upper_image_name=""
+lower_image_name=""
+combined_image_name=""
+type=""
+
+for arg in "$@"
+do
+	if [ "$arg" = "-u" ]; then
+		arg_cnt=0
+		mode=1
+	elif [ "$arg" = "-l" ]; then
+		arg_cnt=0
+		mode=2
+	elif [ "$arg" = "-n" ]; then
+		arg_cnt=0
+		mode=3
+	elif [ "$arg" = "-t" ]; then
+		arg_cnt=0
+		mode=4
+  else
+		if [ $mode = 1 ]; then
+			upper_image_name=$arg
+      		mode=0
+		elif [ $mode = 2 ]; then
+			lower_image_name=$arg
+      		mode=0
+    	elif [ $mode = 3 ]; then
+      		combined_image_name=$arg
+      		mode=0
+		elif [ $mode = 4 ]; then
+			type=$arg
+			mode=0
+		fi	
+	fi
+done
+
+python /home/pi/project/utility/imcomb.py --u $upper_image_name --l $lower_image_name --n $combined_image_name --t $type
+

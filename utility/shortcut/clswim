@@ -1,0 +1,12 @@
+#!/bin/bash
+
+# 촬영된 모든 이미지를 지우는 쉘 프로그램
+
+im_path="~/project/image/swatch_image"
+original_path="/original"
+cropped_path="/cropped"
+combined_path="/combined"
+heatmap_path="/heatmap"
+
+echo "Are you really want to remove the whole images? [y|n]"
+

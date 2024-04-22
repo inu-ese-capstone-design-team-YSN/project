@@ -1,0 +1,23 @@
+#!/bin/bash
+
+mode=1
+start_num=0
+
+for arg in "$@"
+do
+	if [ "$arg" = "-b" ]; then
+		arg_cnt=0
+		mode=1
+    else
+		if [ $mode = 1 ]; then
+			start_num=$arg
+      		mode=0
+        else
+            echo "wrong case. try again."
+        fi
+    fi
+done
+
+echo $start_num
+
+python /home/pi/project/utility/tpg2sw.py --base $start_num

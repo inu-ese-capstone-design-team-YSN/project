@@ -1,0 +1,19 @@
+#!/bin/bash
+
+image_name=""
+mode=0
+
+for arg in "$@"
+do
+	if [ "$arg" = "-o" ]; then
+		mode=1
+    else
+        if [ $mode = 1 ]; then
+            image_name=$arg
+        else
+            echo "Wrong argument. Please try again."
+        fi
+    fi
+done
+
+python /home/pi/project/utility/im2hmap.py --o $image_name

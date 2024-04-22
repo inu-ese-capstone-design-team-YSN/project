@@ -1,0 +1,43 @@
+#!/bin/bash
+
+# 이 문자열 내에서 각 문자는 스크립트에서 처리할 단일 문자 옵션을 나타낸다.
+# 콜론(:)은 해당 옵션이 추가적인 값(인자)을 필요로 함을 나타낸다.
+# 예를 들어, -s 옵션 뒤에는 반드시 관련된 값을 제공해야 하며, getopts는 이 값을
+# OPTARG 변수에 저장하게 된다.
+
+arg_cnt=0
+mode=0
+
+# arguments
+declare -a size # declare an empty list
+file_name="" # file name will be opend
+
+for arg in "$@"
+do
+	if [ "$arg" = "-s" ]; then
+		arg_cnt=0
+		mode=1
+	elif [ "$arg" = "-n" ]; then
+		arg_cnt=0
+		mode=2
+	else
+		if [ $mode = 1 ]; then
+			size+=($arg)
+			((arg_cnt+=1))
+
+			if [ $arg_cnt = 4 ]; then
+				mode=0
+			fi
+
+		elif [ $mode = 2 ]; then
+			file_name=$arg
+			((arg_cnt+=1))
+
+			if [ $arg_cnt = 1 ]; then
+				mode=0
+			fi
+		fi	
+	fi
+done
+
+python /home/pi/project/utility/imcrop.py --size ${size[0]} ${size[1]} ${size[2]} ${size[3]} --name $file_name

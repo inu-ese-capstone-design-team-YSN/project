@@ -1,0 +1,26 @@
+#!/bin/bash
+
+start_num=0
+end_num=0
+mode=0
+
+for arg in "$@"
+do
+	if [ "$arg" = "-s" ]; then
+		arg_cnt=0
+		mode=1
+	elif [ "$arg" = "-e" ]; then
+		arg_cnt=0
+		mode=2
+  else
+		if [ $mode = 1 ]; then
+			start_num=$arg
+            mode=0
+		elif [ $mode = 2 ]; then
+			end_num=$arg
+            mode=0
+		fi	
+	fi
+done
+
+python /home/pi/project/utility/viswab.py --start ${start_num} --end ${end_num}

@@ -57,9 +57,9 @@ if args.t:
 # combine할 이미지는 반드시 cropped 디렉터리에 존재하므로, 이름만 전달받는다.
 # 그리고 comb된 이미지는 역시 /project/image/swatch_image/combined에 저장된다.
 
-first_image_file_path=f"{pf.swatch_cropped_dir_path}/{upper_image_file_name}{upper_image_extension}"
-second_image_file_path=f"{pf.swatch_cropped_dir_path}/{lower_image_file_name}{lower_image_extension}"
-combined_image_file_path=f"{pf.swatch_combined_dir_path}/{combined_image_file_name}{combined_image_extension}"
+first_image_file_path=f"{pf.tpg_cropped_dir_path}/{upper_image_file_name}{upper_image_extension}"
+second_image_file_path=f"{pf.tpg_cropped_dir_path}/{lower_image_file_name}{lower_image_extension}"
+combined_image_file_path=f"{pf.tpg_combined_dir_path}/{combined_image_file_name}{combined_image_extension}"
 
 if comb_type == comb_type_vertically:
     util.combineImagesVertically(first_image_file_path, second_image_file_path, combined_image_file_path)

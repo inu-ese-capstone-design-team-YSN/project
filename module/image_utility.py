@@ -1,8 +1,11 @@
-from PIL import Image
+import math
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+
+from PIL import Image
 from matplotlib.cm import get_cmap
+from skimage.color import rgb2lab, deltaE_ciede2000
 # from vispy import app, scene, color, io
 
 class ImageUtility:
@@ -61,6 +64,9 @@ class ImageUtility:
             지정된 image를 crop하는 함수이다.
             전달받은 left, upper, right, lower를 crop area로 설정하며,
             open된 img 객체를 crop하고 변형한다.
+
+            2024.05.14, jdk
+            이때, right, lower는 포함되지 않고 이전까지만 잘리게 된다.
         """
 
         crop_area = (left, upper, right, lower)
@@ -77,16 +83,19 @@ class ImageUtility:
         lower_image = Image.open(lower_image_path)
 
         # 가로 길이가 동일한지 체크
-        upper_image_size = upper_image.size
-        lower_image_size = lower_image.size
+        upper_image_size = upper_image.size[0]
+        lower_image_size = lower_image.size[0]
 
-        # 이미지의 크기가 동일한지 체크하고
-        # 크기가 다르다면 Error를 일으킨다.
+        # 이미지의 width가 다른지 체크하고,
+        # width가 다르다면 Error를 일으킨다.
         if (not upper_image_size == lower_image_size):
             raise ValueError("Two images have different widths. The widths of the two images have to be the same.")
 
-        width, height = upper_image_size # 두 이미지의 크기가 동일하므로 크기 변수 통일
-        # crop_height = height // 2
+        # 2024.05.13, jdk
+        # 코드 수정: width는 동일하므로 하나의 변수로 사용하고,
+        # height가 달라졌으므로 height를 서로 다른 변수로 구분한다.
+        width, upper_image_height = upper_image.size[0],  upper_image.size[1]
+        _, lower_image_height = lower_image.size[0],  lower_image.size[1]
 
         """
             TODO 2024.04.16, jdk
@@ -107,9 +116,9 @@ class ImageUtility:
         # lower_half_image = lower_image.crop((0, crop_height, width, height))
 
         # 새 이미지 생성
-        combined_image = Image.new('RGB', (width, height*2), (255, 255, 255))
+        combined_image = Image.new('RGB', (width, upper_image_height + lower_image_height), (255, 255, 255))
         combined_image.paste(upper_image, (0, 0))
-        combined_image.paste(lower_image, (0, height))
+        combined_image.paste(lower_image, (0, upper_image_height))
 
         # 이미지 저장.
         # 기존에 저장되어 있던 image 변수를 temp_image에 옮겨놨다가
@@ -332,3 +341,41 @@ class ImageUtility:
     #     image = scene.visuals.Image(normalized_values, parent=view.scene, cmap=vispy_cmap, clim=(0, 1))
 
     #     app.run()
+
+    def RGBtoLAB(self, RGB):
+        # RGB 값을 [0, 1] 범위로 정규화합니다.
+        rgb_normalized = np.array(RGB) / 255.0
+        # 3차원 배열로 재구성합니다.
+        rgb_array = rgb_normalized.reshape(1, 1, 3)
+        # RGB에서 LAB으로 변환합니다.
+        lab = rgb2lab(rgb_array)
+
+        return lab[0, 0, :]  # 첫 번째 픽셀의 LAB 값 반환
+
+    def calculateLABSimilarity(self, rgb1, rgb2):
+        """
+            2024.05.02, jdk
+            RGB color 두 개를 전달받고, 두 색을 CIELAB으로 변환한 다음
+            유사도를 비교하여 반환하는 메서드이다.
+        """
+
+        lab1 = self.RGBtoLAB(rgb1)
+        lab2 = self.RGBtoLAB(rgb2)
+
+        # Delta E 2000을 사용하여 두 색상의 차이를 계산합니다.
+        delta_e = deltaE_ciede2000(lab1[None, None, :], lab2[None, None, :])
+        
+        return delta_e.item()  # numpy array에서 스칼라 값 추출
+    
+    def calculateRGBDistance(self, rgb1, rgb2):
+        # 전체 RGB에 대한 유클리드 거리 계산
+        distance = math.sqrt((rgb1[0] - rgb2[0])**2 + (rgb1[1] - rgb2[1])**2 + (rgb1[2] - rgb2[2])**2)
+        return distance
+
+    def calculateChannelIndependentRGBDistance(self, rgb1, rgb2):
+        # R, G, B 각각에 대한 유클리드 거리 계산
+        r_distance = abs(rgb1[0] - rgb2[0])
+        g_distance = abs(rgb1[1] - rgb2[1])
+        b_distance = abs(rgb1[2] - rgb2[2])
+
+        return (r_distance+g_distance+b_distance)/3

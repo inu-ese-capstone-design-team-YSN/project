@@ -1,23 +1,45 @@
 #!/bin/bash
 
-mode=1
-start_num=0
+# -----------------------------------------------------------
+
+# 2024.05.03 kwc
+# tpg2sw 1 9 하면 1부터 8개씩, 9번의 마지막 8개까지
+# 동작하도록 수정
+
+# 인자 검사: 두 개가 아닐 경우 오류 메시지 출력 후 종료
+# if [ "$#" -ne 2 ]; then
+#     echo "Invalid number of arguments provided."
+#     echo "Usage: $0 [start_num] [end_num]"
+#     exit 1
+# fi
+
+# 변수 할당:
+# start_num - 스크립트에 전달된 첫 번째 인자, 처리 시작 번호
+# end_num - 스크립트에 전달된 두 번째 인자, 처리 종료 번호
+# start_num=$1
+# end_num=$2
+
+# 시작 번호와 끝 번호 출력
+# echo "Start number: $start_num"
+# echo "End number: $end_num"
+
+# -----------------------------------------------------------
+
+mode=0
+
+target_code_name=""
 
 for arg in "$@"
 do
-	if [ "$arg" = "-b" ]; then
-		arg_cnt=0
-		mode=1
-    else
-		if [ $mode = 1 ]; then
-			start_num=$arg
-      		mode=0
-        else
-            echo "wrong case. try again."
-        fi
-    fi
+    if [ "$arg" = "-c" ]; then
+        mode=1
+    elif [ $mode = 1 ]; then
+        target_code_name=$arg
+        mode=0
+	fi
 done
 
-echo $start_num
+echo $target_code_name
 
-python /home/pi/project/utility/tpg2sw.py --base $start_num
+# 파이썬 스크립트 실행
+python /home/pi/project/utility/tpg2sw.py --code $target_code_name

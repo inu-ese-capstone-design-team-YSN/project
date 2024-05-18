@@ -11,5 +11,21 @@
     ],
     "row_margin": 320,
     "col_margin": 50,
-    "fringing_row_margin": 30
+
+    "fringing_row_margin": 30,
+    "fringing_col_margin": 10,
+    "upper_pruning_index_value": 319,
+    "lower_pruning_index_value": 320,
+
+    "non_fringing_row_margin": 20,
+
+    "brightness_margin": 3,
+
+    "shuffle_margin": 20,
+    "random_shuffle_kernel_size": 25,
+    "random_shuffle_stride_size": 17,
+    
+    "col_shuffle_margin": 5,
+    "col_random_shuffle_kernel_size": 7,
+    "col_random_shuffle_stride_size": 3
 }

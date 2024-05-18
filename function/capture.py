@@ -4,12 +4,10 @@ import sys # 시스템 관련 파라미터와 함수를 다루기 위해 사용
 import curses # 터미널 핸들링을 위해 사용, 사용자와 대화형으로 상호작용하는 텍스트 인터페이스 구성에 활용
 from google.cloud import storage   # Google Cloud Storage 서비스를 사용하기 위한 클라이언트 라이브러리
 
-
 # 프로젝트의 data_class 디렉토리를 모듈 검색 경로에 추가하여 해당 디렉토리의 모듈을 사용 가능하게 함
 
 from path_finder import PathFinder  # 파일 경로를 쉽게 관리하기 위해 사용하는 클래스
 from cloud_controller import CloudController  # 클라우드 관련 작업을 관리하는 클래스
-
 
 # ----------------------------------------------------------------------------- #
 
@@ -181,6 +179,69 @@ def delete_last_image(code, directory, image_type):
             return False, "이미지 파일이 존재하지 않습니다."
     return False, "삭제할 이미지 코드가 없습니다."
 
+def capture_image_with_code(stdscr, code, directory, image_type):
+    """
+    특정 코드를 입력 받아 이미지 촬영을 수행하는 함수
+    """
+    curses.noecho()  
+    stdscr.clear()
+    stdscr.addstr("코드를 입력하십시오 (형식 '00-0000_0'):\n")
+    formatted_input = [" ", " ", "-", " ", " ", " ", " ", "_", " "] 
+    stdscr.addstr("".join(formatted_input) + "\r") 
+    stdscr.refresh()
+
+    cursor_positions = [0, 1, 3, 4, 5, 6, 8]  
+    position_index = 0  
+
+    while position_index < 7:  
+        ch = stdscr.getch()
+        if ch == curses.KEY_BACKSPACE or ch == 127 or ch == 8:
+            if position_index > 0:  
+                position_index -= 1  
+                if cursor_positions[position_index] == 3 or cursor_positions[position_index] == 7:
+                    position_index -= 1
+                formatted_input[cursor_positions[position_index]] = ' ' 
+                stdscr.addstr(1, 0, "".join(formatted_input) + "\r")  
+                stdscr.move(1, cursor_positions[position_index])  
+        elif ch >= ord('0') and ch <= ord('9'):
+            formatted_input[cursor_positions[position_index]] = chr(ch)
+            position_index += 1
+            stdscr.addstr(1, 0, "".join(formatted_input) + "\r")
+            if position_index < 7:
+                stdscr.move(1, cursor_positions[position_index])
+
+        if position_index >= 7:
+            break
+
+    stdscr.refresh()
+    formatted_name = "".join(formatted_input).strip()
+    stdscr.addstr(3, 0, "입력된 코드: " + formatted_name + "\n")
+    stdscr.refresh()
+
+    file_name = os.path.join(directory, f"{formatted_name}{image_file_extension}")
+    capture_command[2] = file_name
+
+    process = subprocess.Popen(preview_command)
+    stdscr.addstr("'0'을 눌러 프리뷰를 종료.\n")
+    stdscr.refresh()
+    
+    while True:
+        key = stdscr.getch()
+        if key == ord('0'):  # '0'을 눌러 캡처
+            process.terminate()  # 프리뷰 종료
+            process.wait()
+            break
+    
+    subprocess.run(capture_command)
+
+    if image_type == '1':
+        code[0] = formatted_name
+    elif image_type == '2':
+        code[1] = formatted_name
+    elif image_type == '3':
+        code[2] = formatted_name
+    saveImageInfo(*code)
+    
 
 def main_loop(stdscr):
     """
@@ -220,12 +281,24 @@ def main_loop(stdscr):
             # 사용자 입력 받기
             cmd_input = stdscr.getkey()
             # 입력받은 이미지 유형에 따라 저장 경로 설정
-
+            if cmd_input == '6' and image_type == '2':
+                capture_image_with_code(stdscr, code, directory, image_type)
+                continue
+            
+            
             if cmd_input == '1':
                 # 미리보기 시작
                 process = subprocess.Popen(preview_command)
                 stdscr.addstr("미리보기가 시작되었습니다. '0'를 눌러 중지하십시오.\n")
                 stdscr.refresh()
+                
+                
+                # 잠시 대기하여 미리보기 창이 뜨도록 함
+                curses.napms(5000)
+                # 터미널로 포커스 이동
+                terminal_window_id = subprocess.check_output(['xdotool', 'getactivewindow']).strip()
+                subprocess.run(['xdotool', 'windowactivate', terminal_window_id])
+                
                 # 미리보기 중지 대기 루프
                 while True:
                     stop = stdscr.getkey()

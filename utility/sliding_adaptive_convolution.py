@@ -19,6 +19,11 @@ combined_image_dir = path_finder.tpg_combined_dir_path  # TPG 결합 이미지 �
 image_filename = f"18-6018_combined{extension}"
 image_path = f"{combined_image_dir}/{image_filename}"
 
+# 표준 RGB 값 설정
+standard_r = 88
+standard_g = 111
+standard_b = 62
+
 # 이미지를 열기
 image = Image.open(image_path)
 

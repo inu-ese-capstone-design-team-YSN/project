@@ -10,5 +10,6 @@
         [2025, 2200, 3275, 2810]
     ],
     "row_margin": 320,
-    "col_margin": 50
+    "col_margin": 50,
+    "fringing_row_margin": 30
 }

@@ -2,3 +2,4 @@ image/
 key.json
 *.jpg
 *.png
+*.pyc

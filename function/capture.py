@@ -255,7 +255,7 @@ def main_loop(stdscr):
                     
                         while True:
                             key = stdscr.getch()
-                            if key == ord('0'):  # 스페이스바를 눌러 캡처
+                            if key == ord('0') or key == ord('+'):  # 스페이스바를 눌러 캡처
                                 process.terminate()  # 프리뷰 종료
                                 process.wait()
                                 break
@@ -276,7 +276,7 @@ def main_loop(stdscr):
                 
                     while True:
                         key = stdscr.getch()
-                        if key == ord('0'):  # 스페이스바를 눌러 캡처
+                        if key == ord('0') or key == ord('+'):  # 스페이스바를 눌러 캡처
                             process.terminate()  # 프리뷰 종료
                             process.wait()
                             break

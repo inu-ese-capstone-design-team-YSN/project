@@ -16,8 +16,11 @@
     "fringing_col_margin": 10,
     "upper_pruning_index_value": 319,
     "lower_pruning_index_value": 320,
+    "col_upper_pruning_index_value": 49,
+    "col_lower_pruning_index_value": 50,
 
     "non_fringing_row_margin": 20,
+    "non_fringing_col_margin": 5,
 
     "brightness_margin": 3,
 

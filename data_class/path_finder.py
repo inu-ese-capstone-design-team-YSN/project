@@ -21,6 +21,7 @@ class PathFinder:
         self.swatch_combined_dir_path = os.path.join(self.swatch_image_dir_path, "combined")  # 결합된 이미지 디렉토리
         self.swatch_hue_corrected_dir_path = os.path.join(self.swatch_image_dir_path, "hue_corrected") # 색조 보정 이미지 디렉토리
         self.swatch_test_dir_path = os.path.join(self.swatch_image_dir_path, "test")  # 테스트 이미지 디렉토리
+        
         # TPG 이미지 관련 디렉토리
         self.tpg_image_dir_path = os.path.join(self.image_dir_path, "tpg_image")
         self.tpg_original_dir_path = os.path.join(self.tpg_image_dir_path, "original")  # 원본 이미지 디렉토리
@@ -29,7 +30,9 @@ class PathFinder:
         self.tpg_combined_dir_path = os.path.join(self.tpg_image_dir_path, "combined")  # 결합된 이미지 디렉토리
         self.tpg_hue_corrected_dir_path = os.path.join(self.tpg_image_dir_path, "hue_corrected") # 색조 보정 이미지 디렉토리
         self.tpg_test_dir_path = os.path.join(self.tpg_image_dir_path, "test")  # 테스트 이미지 디렉토리
+        self.tpg_compressed_dir_path = os.path.join(self.tpg_image_dir_path, "compressed")
 
+        # TCX 이미지 관련 디렉토리
         self.tcx_image_dir_path = os.path.join(self.image_dir_path, "tcx_image")
         
         self.config_dir_path = os.path.join(base_dir_path, "config") # 설정 파일이 저장되는 디렉토리

@@ -83,7 +83,7 @@ def main():
     # PathFinder 인스턴스를 생성하여 디렉토리 경로를 가져옴
     path_finder = PathFinder()
     extension = ".png"  # 파일 확장자 설정
-    combined_image_dir = path_finder.tpg_combined_dir_path  # TPG 결합 이미지 디렉토리 경로
+    combined_image_dir = path_finder.tpg_combined_directory_path  # TPG 결합 이미지 디렉토리 경로
 
     # 이미지 파일 이름과 경로 설정 (예: 2500 x 2500 크기)
     # image_filename = f"19-1606_combined{extension}"

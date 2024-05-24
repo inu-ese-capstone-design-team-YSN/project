@@ -40,7 +40,7 @@ def weighted_average_convolution(image_array, kernel_size):
     
     return result
 
-original_image = Image.open(f"{pf.tpg_combined_dir_path}/122_123.jpg")
+original_image = Image.open(f"{pf.tpg_combined_directory_path}/122_123.jpg")
 image_array = np.array(original_image)
 
 # 컨볼루션 커널 크기

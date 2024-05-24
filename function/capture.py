@@ -157,7 +157,7 @@ def validate_and_format_image_name(stdscr, image_type, last_tpg_code, tpg_count)
         formatted_name = "".join(formatted_input).strip() 
         # 최종 입력된 이름 출력
         stdscr.addstr(3, 0, "입력된 이름: " + formatted_name + "\n")
-        formatted_name = "".join(formatted_input).strip() + "_1"
+        formatted_name = "".join(formatted_input).strip()
         
     # 처리된 이름 반환
     return formatted_name
@@ -325,7 +325,7 @@ def main_loop(stdscr):
                         process = subprocess.Popen(preview_command)
                         stdscr.addstr("'0'을 눌러 프리뷰를 종료.\n")
                         stdscr.refresh()
-                    
+                    	
                         while True:
                             key = stdscr.getch()
                             if key == ord('0') or key == ord('+'):  # 스페이스바를 눌러 캡처

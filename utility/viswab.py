@@ -43,9 +43,9 @@ util = ImageUtility()
 path_finder = PathFinder()
 cloud_controller = CloudController(path_finder=path_finder)
 
-original_image_dir = path_finder.tpg_original_dir_path
+original_image_dir = path_finder.tpg_original_directory_path
 cropped_image_dir = path_finder.tpg_cropped_dir_path
-combined_image_dir = path_finder.tpg_combined_dir_path
+combined_image_dir = path_finder.tpg_combined_directory_path
 heatmap_image_dir = path_finder.tpg_heatmap_dir_path
 
 # image crop 영역 설정

@@ -22,8 +22,8 @@ start_num부터 end_num까지의 image에 대해서 standard RGB와의 차이를
 
 """
 
-original_image_dir = path_finder.tpg_original_dir_path
-hue_corrected_image_dir = path_finder.tpg_hue_corrected_dir_path
+original_image_dir = path_finder.tpg_original_directory_path
+hue_corrected_image_dir = path_finder.tpg_HC_directory_path
 
 # 몇 번 이미지부터 몇 번 이미지까지 처리할 것인지 정하는 반복 변수
 start_num = 38

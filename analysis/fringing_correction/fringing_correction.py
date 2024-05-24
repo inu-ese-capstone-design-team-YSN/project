@@ -7,6 +7,9 @@ from matplotlib.cbook import boxplot_stats
 import json
 import copy
 from dataclasses import dataclass
+import tqdm
+import cv2
+from scipy.stats import kurtosis
 
 from path_finder import PathFinder
 pf = PathFinder()
@@ -197,11 +200,13 @@ def getOuterFringingPixelsAnomalyPoint(outer_calc_boundary_pixels):
     for i in range(col_len):
         # boxplot 통계량 계산
         # whis=3.0으로 설정하여, 이미지 상에서 매우 이상한 값만 잡아낸다.
+        
         stats = boxplot_stats(blue_pixels[:, i], whis=3.0)
         plt.close()  # plot을 그리지 않도록 닫기
 
         # 이상치 추출
         anomaly_high = stats[0]['whishi']
+        # print(f"anomaly_high: {anomaly_high}")
         anomaly_points.append(anomaly_high)
 
     return anomaly_points
@@ -248,11 +253,12 @@ def getFringingRowsIndicies(fringing_rows_identifier, image_correction_setting):
         # 길이가 2 이상임에도 319와 320이 모두 들어있지 않은 경우 (잘못된 경우)
         # 현재 촬영 구조상 절대로 둘 중 하나도 포함되지 않을 수가 없음.
         if upper_pruning_index_value not in fringing_rows_indicies and lower_pruning_index_value not in fringing_rows_indicies:
+            print(fringing_rows_indicies)
             print("Something went wrong on choosing checking fringing_rows_indicies...")
             
-            # fringing_rows_indicies를 None으로 설정하여
-            # 별도의 보정을 수행하지 못하게 만든다.
-            fringing_rows_indicies = None
+            # fringing_rows_indicies를 빈 list로 반환하여
+            # 의미있는 보정이 수행되지 못하게 한다.
+            fringing_rows_indicies = []
 
         # 319와 320이 둘 다 들어있는 경우 (정상)
         elif upper_pruning_index_value in fringing_rows_indicies and lower_pruning_index_value in fringing_rows_indicies:
@@ -364,6 +370,9 @@ def getClosestNonFringingPixelByColumn(row_len, outer_anomaly_point, pixel_index
 
     # bluing pixel이 존재하지 않는 경우는 거의 100% 존재하지 않으므로,
     # 별도의 예외 처리는 하지 않고, 반드시 값을 찾을 수 있는 것으로 가정한다.
+
+    # 2024.05.22, jdk
+    # Not Exists가 나오는 경우가 존재한다.
     for cur_row_idx in range(row_idx+1, row_len):
         if isFringingPixel(outer_anomaly_point, cur_row_idx, col_idx):
             # 현재 찾는 row가 bluing pixel인 경우
@@ -372,6 +381,7 @@ def getClosestNonFringingPixelByColumn(row_len, outer_anomaly_point, pixel_index
         else:  
             # 현재 찾는 row가 bluing pixel이 아닌 경우
             # 현재 pixel의 index를 반환한다.
+            print("found!")
             return (cur_row_idx, col_idx)
     
     """
@@ -860,24 +870,254 @@ def shuffle_kernel_pixels(image, kernel_size=3, stride=2):
     """
     height, width, _ = image.shape
     shuffled_image = np.copy(image)
-    
+
     # 커널을 이동시키며 각 영역에 대해 처리
-    for i in range(0, height - kernel_size + 1, stride):
-        for j in range(0, width - kernel_size + 1, stride):
-            # 커널 영역 추출
-            kernel = image[i:i+kernel_size, j:j+kernel_size, :]
-            # 커널 영역을 1D로 변환
-            flattened = kernel.reshape(-1, 3)
-            # 픽셀 인덱스 섞기
-            np.random.shuffle(flattened)
-            # 섞인 픽셀을 원래 차원으로 변환
-            shuffled_kernel = flattened.reshape(kernel_size, kernel_size, 3)
-            # 섞인 커널을 이미지에 할당
-            shuffled_image[i:i+kernel_size, j:j+kernel_size, :] = shuffled_kernel
-    
+    # for i in range(0, height - kernel_size + 1, stride):
+
+    #     if i+kernel_size
+        
+    #     for j in range(0, width - kernel_size + 1, stride):
+    #         # 커널 영역 추출
+    #         kernel = image[i:i+kernel_size, j:j+kernel_size, :]
+    #         # 커널 영역을 1D로 변환
+    #         flattened = kernel.reshape(-1, 3)
+    #         # 픽셀 인덱스 섞기
+    #         np.random.shuffle(flattened)
+    #         # 섞인 픽셀을 원래 차원으로 변환
+    #         shuffled_kernel = flattened.reshape(kernel_size, kernel_size, 3)
+    #         # 섞인 커널을 이미지에 할당
+    #         shuffled_image[i:i+kernel_size, j:j+kernel_size, :] = shuffled_kernel       
+
+    i = 0
+    j = 0
+
+    # Sliding Kernel Shuffle 시작
+    while (True):
+        height_kernel_size = kernel_size
+
+        # 만약 kenel이 이미지의 height를 초과하여 넘어간다면,
+        # 이미지 내부만 처리되도록 height_kernel_size를 조절한다.
+        if i + height_kernel_size > height:
+            height_kernel_size = height - i - 1
+
+        # print(f"i: {i}")
+        # print(f"height_kernel_size: {height_kernel_size}")
+
+        while (True):  
+            width_kernel_size = kernel_size
+            
+            # 만약 kernel이 이미지의 width를 초과하여 넘어간다면,
+            # 이미지 내부만 처리되도록 width_kernel_size를 조절한다.
+            if j + width_kernel_size > width:
+                # print(f"j: {j}")
+                # print(f"j+width_kernel_size: {j+width_kernel_size}, width: {width}")
+                width_kernel_size = width - j - 1
+
+            # print(f"width_kernel_size: {width_kernel_size}")
+
+            kernel = image[i:i+height_kernel_size, j:j+width_kernel_size, :]
+            flattend = kernel.reshape(-1, 3)
+            np.random.shuffle(flattend)
+            shuffled_kernel = flattend.reshape(height_kernel_size, width_kernel_size, 3)
+            shuffled_image[i:i+height_kernel_size, j:j+width_kernel_size, :] = shuffled_kernel
+            # print(f"shuffled_image.shape: {shuffled_image.shape}")
+
+            # 현재 위치에 대해서 shuffle이 끝났으므로,
+            # 같은 row에서 col의 위치인 j를 stride 만큼 옮겨준다.
+            j += stride
+
+            # j를 stride 만큼 옮겼을 때,
+            # 만약 j가 width보다 크거나 같다면
+            # 한 row에 대한 shuffle이 끝난 것이므로
+            # inner while loop을 탈출한다.
+            if j >= width:
+                break
+        
+
+        # 한 row에 대해서 shuffle이 끝났으므로,
+        # 다음 row로 넘어가기 위해 i를 stride 만큼 옮겨준다.
+        i += stride
+
+        j = 0
+
+        # i를 stride 만큼 옮겼을 때,
+        # 만약 i가 hieght보다 크거나 같다면
+        # 모든 영역에 대한 shuffle이 끝난 것이므로
+        # outer while loop을 탈출한다.
+        if i >= height:
+            break
+
     return shuffled_image
 
+def shuffleFringingRowsPixels(corrected_fringing_rows):
+    """
+        2024.05.20, jdk
+        전달받은 array의 모든 pixel을 random하게 섞는 함수
+    """
+
+    height, width, channels = corrected_fringing_rows.shape
+
+    indicies = np.arange(height * width)
+    np.random.shuffle(indicies)
+
+    flattend = corrected_fringing_rows.reshape(-1, channels)
+    # original array를 pixel만 유지한 채로 flatten한다.
+
+    flattend = flattend[indicies]
+    shuffled_array = flattend.reshape(height, width, channels)
+
+    return shuffled_array
+
+def calcBrightnessRatioByColumn(upper_brightness, lower_brightness, height):
+
+    # 현재 column에서 pixel별로 가져야 
+    # 하는 밝기를 저장하는 list
+    pixels_brightness = []
+    diff = (upper_brightness - lower_brightness)/(height+1)
+
+    # 각 픽셀이 가져야 하는 밝기를 저장
+    for h in range(1, height+1):
+        pixels_brightness.append(upper_brightness - h*diff)
+
+    return pixels_brightness
+
+def correctPixelsByLinearBrightness(corrected_fringing_rows, brightness_margin):
+    """
+        2024.05.20, jdk
+        전달받은 array에 대해서 밝기 보정을 실시한다.
+        위/아래로 세 픽셀은 밝기 판단용이다.
+    """
+
+    height, width, _ = corrected_fringing_rows.shape
+
+    for w in range(width):
+        
+        upper_pixels = corrected_fringing_rows[0:brightness_margin, w, :]
+
+        upper_r_mean = np.mean(upper_pixels[:, 0])
+        upper_g_mean = np.mean(upper_pixels[:, 1])
+        upper_b_mean = np.mean(upper_pixels[:, 2])
+
+        rgb_mean = (upper_r_mean, upper_g_mean, upper_b_mean)
+        rgb_mean = np.round(rgb_mean)
+
+        upper_brightness = calcBrightness(rgb_mean)
+
+        lower_pixels = corrected_fringing_rows[height-brightness_margin:height, w, :]
+
+        lower_r_mean = np.mean(lower_pixels[:, 0])
+        lower_g_mean = np.mean(lower_pixels[:, 1])
+        lower_b_mean = np.mean(lower_pixels[:, 2])
+
+        rgb_mean = (lower_r_mean, lower_g_mean, lower_b_mean)
+        rgb_mean = np.round(rgb_mean)
+
+        lower_brightness = calcBrightness(rgb_mean)
+
+        area_height = (height-brightness_margin-1)*brightness_margin
+
+        # pixel 별로 밝기의 비율을 저장하는 리스트
+        pixels_brightness = calcBrightnessRatioByColumn(upper_brightness, lower_brightness, area_height)
+        # print("brightness")
+        # print(upper_brightness)
+        # print(lower_brightness)
+        # print(pixels_brightness)
+
+        for h in range(brightness_margin, height-brightness_margin):
+            # 이제 column에서 pixel 별 밝기의 값이 정해졌으므로,
+            # 상대적인 비를 구하고 r, g, b값을 보정해 준다.
+            cur_pixel_rgb = corrected_fringing_rows[h, w, :]
+            cur_pixel_brightness = calcBrightness(cur_pixel_rgb)
+
+            ratio = pixels_brightness[h-brightness_margin] / cur_pixel_brightness
+            corrected_pixel_rgb = ratio*cur_pixel_rgb
+
+            corrected_fringing_rows[h, w, :] = corrected_pixel_rgb
+ 
+    return corrected_fringing_rows
+
+def applyGaussianSmoothing(area_array, height_start, height_end, width_start, width_end, kernel_size=5, stride=1):
+    """
+    이미지의 특정 구간에 가우시안 블러를 적용하여 스무딩하는 함수
+    
+    Args:
+    area_array (numpy.ndarray): 입력 이미지 배열.
+    x_start (int): 스무딩을 적용할 구간의 시작 x좌표.
+    y_start (int): 스무딩을 적용할 구간의 시작 y좌표.
+    x_end (int): 스무딩을 적용할 구간의 끝 x좌표.
+    y_end (int): 스무딩을 적용할 구간의 끝 y좌표.
+    kernel_size (int): 가우시안 커널 크기.
+    stride (int): 커널 이동 시의 스트라이드 값.
+    
+    Returns:
+    numpy.ndarray: 스무딩이 적용된 이미지.
+    """
+
+    region_of_interest = area_array[height_start:height_end, width_start:width_end]
+    height, width, _ = region_of_interest.shape
+
+    i = 0
+    j = 0
+
+    # gaussian smoothing 시작
+    while (True):
+        height_kernel_size = kernel_size
+
+        # 만약 kenel이 이미지의 height를 초과하여 넘어간다면,
+        # 이미지 내부만 처리되도록 height_kernel_size를 조절한다.
+        if i + height_kernel_size > height:
+            height_kernel_size = height - i - 1
+
+            # height_kernel_size가 0인 경우는 존재할 수 없으므로 고려하지 않음.
+            # 왜냐면, stride가 kernel_size보다 작기 때문이다.
+            if height_kernel_size % 2 == 0:
+                height_kernel_size -= 1
+
+
+        while (True):  
+            width_kernel_size = kernel_size
+            
+            # 만약 kernel이 이미지의 width를 초과하여 넘어간다면,
+            # 이미지 내부만 처리되도록 width_kernel_size를 조절한다.
+            if j + width_kernel_size > width:
+                width_kernel_size = width - j - 1
+
+                if width_kernel_size % 2 == 0:
+                    width_kernel_size -= 1
+                    
+            kernel = area_array[i:i+height_kernel_size, j:j+width_kernel_size, :]
+            blurred_kernel = cv2.GaussianBlur(kernel, (height_kernel_size, width_kernel_size), 0)
+            region_of_interest[i:i+height_kernel_size, j:j+width_kernel_size, :] = blurred_kernel
+
+            # 현재 위치에 대해서 shuffle이 끝났으므로,
+            # 같은 row에서 col의 위치인 j를 stride 만큼 옮겨준다.
+            j += stride
+
+            # j를 stride 만큼 옮겼을 때,
+            # 만약 j가 width보다 크거나 같다면
+            # 한 row에 대한 shuffle이 끝난 것이므로
+            # inner while loop을 탈출한다.
+            if j >= width:
+                break
+        
+
+        # 한 row에 대해서 shuffle이 끝났으므로,
+        # 다음 row로 넘어가기 위해 i를 stride 만큼 옮겨준다.
+        i += stride
+
+        j = 0
+
+        # i를 stride 만큼 옮겼을 때,
+        # 만약 i가 hieght보다 크거나 같다면
+        # 모든 영역에 대한 shuffle이 끝난 것이므로
+        # outer while loop을 탈출한다.
+        if i >= height:
+            break
+    
+    return area_array
+
 def correctFringingRowsOfArea(area_array, image_correction_setting):
+
     """
         2024.05.14, jdk
         fringing이 나타난 pixel을 보정하는 함수이다.
@@ -887,6 +1127,8 @@ def correctFringingRowsOfArea(area_array, image_correction_setting):
         1) area_array: 전체 이미지에 대해서 특정 부분만 잘라낸 array
     """
     # print("\n\n(correctFringingRowsOfArea)")
+
+    height, width, _ = area_array.shape
 
     # 1) 
     # 전달 받은 하나의 area_array에 대해 각 row별 Blue Pixel의 평균을 계산한다.
@@ -910,7 +1152,7 @@ def correctFringingRowsOfArea(area_array, image_correction_setting):
     # bluing rows의 indicies를 얻어낸다.
     # 해당 indicies는 area_array를 기준으로 하는 indicies이다.
     fringing_rows_indicies = getFringingRowsIndicies(fringing_rows_identifier, image_correction_setting)
-    # => 실제로 area_array에서 어느 위치가 anomaly인지 index를 제공하는 함수이다.
+    # 실제로 area_array에서 어느 위치가 anomaly인지 index를 제공하는 함수이다.
 
     # 만약 fringing_rows_indicies가 empty array라면
     # 보정할 것이 없다고 판단한다.
@@ -921,7 +1163,8 @@ def correctFringingRowsOfArea(area_array, image_correction_setting):
         non_fringing_row_margin = image_correction_setting.non_fringing_row_margin
 
         fringing_rows_indicies = np.arange(upper_pruning_index_value - non_fringing_row_margin + 1, lower_pruning_index_value + non_fringing_row_margin)
-        print("fringing_rows_indexes: [] (empty). Set default correction boundary")
+        print(f"modified_fringing_rows_indicies: {fringing_rows_indicies}")
+        # print("fringing_rows_indexes: [] (empty). Set default correction boundary")
     else:
         # 5) add margin to fringing rows
         # 위의 과정으로는 실제로 나타나는 fringing row를 모두 잡아낼 수가 없다.
@@ -954,6 +1197,22 @@ def correctFringingRowsOfArea(area_array, image_correction_setting):
     # print(f"{upper_outer_array.shape}")
     # print(f"{lower_outer_array.shape}")
 
+    """
+        2024.05.22, jdk
+        anomaly point 계산에 대한 문제 발생.
+        만약, blue값이 거의 동일하게 찍힌다면 제대로 된 anomaly를 잡아내지 못하라 가능성이 매우 높다.
+        이에 따라 첨도(kurtosis)를 계산해서 첨도가 일정 값 이상이라면 아예 보정하지 않도록 하는 방식을
+        도입하여 추가적인 filtering을 진행하도록 해야 할 것 같다.
+    """
+
+    upper_outer_array_kurtosis = kurtosis(upper_outer_array[:, :, 2].flatten(), fisher=False)
+    lower_outer_array_kurtosis = kurtosis(lower_outer_array[:, :, 2].flatten(), fisher=False)
+
+    """"""
+
+    print(f"upper_outer_array_kurtosis: {upper_outer_array_kurtosis}")
+    print(f"lower_outer_array_kurtosis: {lower_outer_array_kurtosis}")
+
     # 7-1) 
     # 얻어낸 upper/outer array에 대해서 Anomaly Point를 얻어낸다.
     # outer anomaly point는 outer array의 column 별로 구해낸다.
@@ -964,6 +1223,8 @@ def correctFringingRowsOfArea(area_array, image_correction_setting):
     # 위에서 얻어낸 Anomaly Point에 해당하는 pixel들의 index를 얻어낸다.
     upper_anomaly_indicies = np.where(upper_outer_array[:, :, 2] > upper_outer_anomaly_point)
     lower_anomaly_indicies = np.where(lower_outer_array[:, :, 2] > lower_outer_anomaly_point)
+    # print(f"upper_anomaly_indicies: {upper_anomaly_indicies}")
+    # print(f"lower_anomaly_indicies: {lower_anomaly_indicies}")
 
     # 7-2) 
     # upper area의 보정 코드를 활용하여
@@ -1002,6 +1263,7 @@ def correctFringingRowsOfArea(area_array, image_correction_setting):
 
     # 변경된 outer array에 대해서 fringing rows 보정을 수행한다.
     corrected_fringing_rows = correctFringingRows(area_array, fringing_rows_indicies)
+    print(f"no margin fringing rows shape: {corrected_fringing_rows.shape}")
 
     # # 9-2)
     # # Fringing rows의 모든 pixel을 random하게 섞는다.
@@ -1010,28 +1272,42 @@ def correctFringingRowsOfArea(area_array, image_correction_setting):
     # # 10-1)
     # # 섞은 pixel에 대해 correctPixelsByLinearBrightness를 실행
     # area_array[fringing_rows_indicies[0]:fringing_rows_indicies[-1]+1, :, :] = corrected_fringing_rows
-
-    # global brightness_margin
+    # brightness_margin = image_correction_setting.brightness_margin
 
     # # 10-2)
     # # 밝기 판단을 위하여 위/아래로 3칸 정도를 추가로 가져와 저장한다.
     # # 이후 보정이 수행되면 보정된 부분만 잘라낸다.
     # corrected_fringing_rows = area_array[fringing_rows_indicies[0]-brightness_margin:fringing_rows_indicies[-1]+1+brightness_margin, :, :]
-    # corrected_fringing_rows = correctPixelsByLinearBrightness(corrected_fringing_rows)
-    # corrected_fringing_rows = corrected_fringing_rows[3:-3, :, :]
+    # corrected_fringing_rows = correctPixelsByLinearBrightness(corrected_fringing_rows, brightness_margin)
+    # corrected_fringing_rows = corrected_fringing_rows[brightness_margin:-brightness_margin, :, :]
 
-    # # 11)
+    # # 10-3)
     # # 보정된 array를 원본 array에 삽입한다.
     # area_array[fringing_rows_indicies[0]:fringing_rows_indicies[-1]+1, :, :] = corrected_fringing_rows
+    # # print(f"{fringing_rows_indicies[0]}, {fringing_rows_indicies[-1]}: {fringing_rows_indicies[-1] - fringing_rows_indicies[0] + 1}")
 
+    # 11) 보정된 밝기에 따라 kernel slide shuffle을 진행한다.
     shuffle_margin = image_correction_setting.shuffle_margin
     random_shuffle_kernel_size = image_correction_setting.random_shuffle_kernel_size
     random_shuffle_stride_size = image_correction_setting.random_shuffle_stride_size
 
     corrected_fringing_rows = area_array[fringing_rows_indicies[0]-shuffle_margin:fringing_rows_indicies[-1]+shuffle_margin, :, :]
+    # print(f"corrected_fringing_rows.shape: {corrected_fringing_rows.shape}")
+
     corrected_fringing_rows = shuffle_kernel_pixels(corrected_fringing_rows, kernel_size=random_shuffle_kernel_size, stride=random_shuffle_stride_size)
     area_array[fringing_rows_indicies[0]-shuffle_margin:fringing_rows_indicies[-1]+shuffle_margin, :, :] = corrected_fringing_rows
 
+    # 12) Brightness Smoothing을 진행하기 위한 index 반환
+    # smoothing_index_for_gaussian_smoothing = (fringing_rows_indicies[0]-shuffle_margin, fringing_rows_indicies[-1]+shuffle_margin, width)
+
+    # gaussian_smoothing_kernel_size = image_correction_setting.gaussian_smoothing_kernel_size
+    # gaussian_smoothing_stride_size = image_correction_setting.gaussian_smoothing_stride_size
+
+    # area_array = applyGaussianSmoothing(area_array, smoothing_index_for_gaussian_smoothing[0], smoothing_index_for_gaussian_smoothing[1], 
+    #                        0, width, 
+    #                        gaussian_smoothing_kernel_size, gaussian_smoothing_stride_size)
+
+    # 13) 결과 반환
     return area_array
 
 def correctFringingColumnsOfArea(area_array, image_correction_setting):
@@ -1089,7 +1365,7 @@ class ImageCorrectionSetting:
     col_upper_pruning_index_value: int
     col_lower_pruning_index_value: int
 
-    # brightness_margin: int
+    brightness_margin: int
 
     shuffle_margin: int
     random_shuffle_kernel_size: int
@@ -1099,10 +1375,14 @@ class ImageCorrectionSetting:
     col_random_shuffle_kernel_size: int
     col_random_shuffle_stride_size: int
 
-temp_image_dir_path = "./analysis/fringing_correction/temp_images"
+    gaussian_smoothing_kernel_size: int
+    gaussian_smoothing_stride_size: int
+
+temp_image_dir_path = "./analysis/fringing_correction"
 tpg_combined_dir_path = "./image/tpg_image/combined"
 
 # 19-0511
+# tpg_code = "13-2809"
 tpg_code = "19-0511"
 postfix = "combined"
 extension = ".png"
@@ -1124,7 +1404,7 @@ image_height, image_width = image.size
     이미지 세팅 파일 분리를 통해 모듈화로 세팅값 가져오기
 """
 
-image_settings_file_path = pf.image_settings_file_path
+image_settings_file_path = "./config/image_settings.json"
 with open(image_settings_file_path, 'r', encoding='utf-8') as file:
     image_setting = json.load(file)
 
@@ -1155,10 +1435,14 @@ col_shuffle_margin = image_setting['col_shuffle_margin']
 col_random_shuffle_kernel_size = image_setting['col_random_shuffle_kernel_size']
 col_random_shuffle_stride_size = image_setting['col_random_shuffle_stride_size']
 
+gaussian_smoothing_kernel_size = image_setting['gaussian_smoothing_kernel_size']
+gaussian_smoothing_stride_size = image_setting['gaussian_smoothing_stride_size']
+
 # 4개의 영역을 기반으로 Image를 분할하여 얻은 numpy array를 갖고 있는 list
 column_fringing_area_array = getColumnFringingAreaArray(image, area_size, image_height)
 
 image_correction_setting = ImageCorrectionSetting(
+    brightness_margin= brightness_margin,
     fringing_row_margin=fringing_row_margin,
     fringing_col_margin=fringing_col_margin,
     non_fringing_row_margin=non_fringing_row_margin,
@@ -1172,7 +1456,9 @@ image_correction_setting = ImageCorrectionSetting(
     random_shuffle_stride_size=random_shuffle_stride_size,
     col_shuffle_margin=col_shuffle_margin,
     col_random_shuffle_kernel_size=col_random_shuffle_kernel_size,
-    col_random_shuffle_stride_size=col_random_shuffle_stride_size
+    col_random_shuffle_stride_size=col_random_shuffle_stride_size,
+    gaussian_smoothing_kernel_size=gaussian_smoothing_kernel_size,
+    gaussian_smoothing_stride_size=gaussian_smoothing_stride_size
 )
 
 # --------------------------------------------------------------------------- #
@@ -1180,11 +1466,17 @@ image_correction_setting = ImageCorrectionSetting(
 column_fringing_area_array = correctFringingColumnsOfArea(column_fringing_area_array, image_correction_setting)
 image = changeCorrectedFringingAreaOfOriginalImage(image, area_size, image_height, column_fringing_area_array)
 
+print("Correcting column fringing area")
 area_array_list = getAreaArrayList(image, area_size)
 
 # correction 실시
+print("\n\nCorrecting row fringing area_1")
 area_array_list[0] = correctFringingRowsOfArea(area_array_list[0], image_correction_setting)
+
+print("\n\nCorrecting row fringing area_2")
 area_array_list[1] = correctFringingRowsOfArea(area_array_list[1], image_correction_setting)
+
+print("\n\nCorrecting row fringing area_3")
 area_array_list[2] = correctFringingRowsOfArea(area_array_list[2], image_correction_setting)
 
 # corrected_area_image를 하나로 합성
@@ -1197,90 +1489,3 @@ image.save(corrected_image_file_path)
 ###############################################################################
 ###############################################################################
 
-# def shuffleFringingRowsPixels(corrected_fringing_rows):
-#     """
-#         2024.05.20, jdk
-#         전달받은 array의 모든 pixel을 random하게 섞는 함수
-#     """
-
-#     height, width, channels = corrected_fringing_rows.shape
-
-#     indicies = np.arange(height * width)
-#     np.random.shuffle(indicies)
-
-#     flattend = corrected_fringing_rows.reshape(-1, channels)
-#     # original array를 pixel만 유지한 채로 flatten한다.
-
-#     flattend = flattend[indicies]
-#     shuffled_array = flattend.reshape(height, width, channels)
-
-#     return shuffled_array
-
-# def calcBrightnessRatioByColumn(upper_brightness, lower_brightness, height):
-
-#     # 현재 column에서 pixel별로 가져야 
-#     # 하는 밝기를 저장하는 list
-#     pixels_brightness = []
-#     diff = (upper_brightness - lower_brightness)/(height+1)
-
-#     # 각 픽셀이 가져야 하는 밝기를 저장
-#     for h in range(1, height+1):
-#         pixels_brightness.append(upper_brightness - h*diff)
-
-#     return pixels_brightness
-
-# def correctPixelsByLinearBrightness(corrected_fringing_rows):
-#     """
-#         2024.05.20, jdk
-#         전달받은 array에 대해서 밝기 보정을 실시한다.
-#         위/아래로 세 픽셀은 밝기 판단용이다.
-#     """
-
-#     height, width, _ = corrected_fringing_rows.shape
-#     global brightness_margin
-
-#     for w in range(width):
-        
-#         upper_pixels = corrected_fringing_rows[0:2+1, w, :]
-
-#         upper_r_mean = np.mean(upper_pixels[:, 0])
-#         upper_g_mean = np.mean(upper_pixels[:, 1])
-#         upper_b_mean = np.mean(upper_pixels[:, 2])
-
-#         rgb_mean = (upper_r_mean, upper_g_mean, upper_b_mean)
-#         rgb_mean = np.round(rgb_mean)
-
-#         upper_brightness = calcBrightness(rgb_mean)
-
-#         lower_pixels = corrected_fringing_rows[height-3:height, w, :]
-
-#         lower_r_mean = np.mean(lower_pixels[:, 0])
-#         lower_g_mean = np.mean(lower_pixels[:, 1])
-#         lower_b_mean = np.mean(lower_pixels[:, 2])
-
-#         rgb_mean = (lower_r_mean, lower_g_mean, lower_b_mean)
-#         rgb_mean = np.round(rgb_mean)
-
-#         lower_brightness = calcBrightness(rgb_mean)
-
-#         area_height = height-2*brightness_margin
-
-#         # pixel 별로 밝기의 비율을 저장하는 리스트
-#         pixels_brightness = calcBrightnessRatioByColumn(upper_brightness, lower_brightness, area_height)
-#         # print("brightness")
-#         # print(upper_brightness)
-#         # print(lower_brightness)
-#         # print(pixels_brightness)
-
-#         for h in range(brightness_margin, height-brightness_margin):
-#             # 이제 column에서 pixel 별 밝기의 값이 정해졌으므로,
-#             # 상대적인 비를 구하고 r, g, b값을 보정해 준다.
-#             cur_pixel_rgb = corrected_fringing_rows[h, w, :]
-#             cur_pixel_brightness = calcBrightness(cur_pixel_rgb)
-
-#             ratio = pixels_brightness[h-brightness_margin] / cur_pixel_brightness
-#             corrected_pixel_rgb = ratio*cur_pixel_rgb
-
-#             corrected_fringing_rows[h, w, :] = corrected_pixel_rgb
-    
-#     return corrected_fringing_rows

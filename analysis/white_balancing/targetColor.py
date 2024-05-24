@@ -4,7 +4,7 @@ from path_finder import PathFinder
 
 path_finder = PathFinder()
 
-tpg_combined_dir = path_finder.tpg_combined_dir_path
+tpg_combined_dir = path_finder.tpg_combined_directory_path
 
 file_name = "18-6018"
 extension = ".jpg"

@@ -11,7 +11,7 @@ end_num = 265
 # 이름에 더해줄 숫자를 지정
 add_num = -2
 
-original_image_dir_path = path_finder.tpg_original_dir_path
+original_image_dir_path = path_finder.tpg_original_directory_path
 
 for i in range(start_num, end_num+1):
     original_number = i

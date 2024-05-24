@@ -3,7 +3,7 @@ import tarfile
 from path_finder import PathFinder
 
 pf = PathFinder()
-tpg_original_image_dir_path = pf.tpg_original_dir_path
+tpg_original_image_dir_path = pf.tpg_original_directory_path
 tpg_compressed_dir_path = pf.tpg_compressed_dir_path
 
 tpg_lowest_hue = 0
@@ -14,7 +14,7 @@ def compress_tpg_images():
     
     # 00부터 64까지의 숫자 문자열 리스트 생성
     # {i:02}와같이 사용하면 한 글자 숫자를 prefix 0을 붙여 가능
-    hue_list = [f"{i:02}" for i in range(12,16)]
+    hue_list = [f"{i:02}" for i in range(51, 65)]
     
     for hue in hue_list:
         matching_files = [f for f in files if f[3:5] == hue]

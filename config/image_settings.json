@@ -9,26 +9,30 @@
         [2025, 1545, 3275, 2185],
         [2025, 2200, 3275, 2810]
     ],
+    
     "row_margin": 320,
     "col_margin": 50,
 
     "fringing_row_margin": 30,
-    "fringing_col_margin": 10,
+    "fringing_col_margin": 20,
     "upper_pruning_index_value": 319,
     "lower_pruning_index_value": 320,
     "col_upper_pruning_index_value": 49,
     "col_lower_pruning_index_value": 50,
 
     "non_fringing_row_margin": 20,
-    "non_fringing_col_margin": 5,
+    "non_fringing_col_margin": 10,
 
-    "brightness_margin": 3,
+    "brightness_margin": 5,
 
-    "shuffle_margin": 20,
-    "random_shuffle_kernel_size": 25,
-    "random_shuffle_stride_size": 17,
+    "shuffle_margin": 100,
+    "random_shuffle_kernel_size": 49,
+    "random_shuffle_stride_size": 25,
     
-    "col_shuffle_margin": 5,
-    "col_random_shuffle_kernel_size": 7,
-    "col_random_shuffle_stride_size": 3
+    "col_shuffle_margin": 100,
+    "col_random_shuffle_kernel_size": 49,
+    "col_random_shuffle_stride_size": 25,
+
+    "gaussian_smoothing_kernel_size": 99,
+    "gaussian_smoothing_stride_size": 46
 }

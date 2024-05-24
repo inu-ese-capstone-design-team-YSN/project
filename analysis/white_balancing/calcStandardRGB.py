@@ -13,7 +13,7 @@ path_finder = PathFinder()
 한 개의 이미지에 대해서 Outer Area 값의 평균을 구하고, Standard와의 차이를 구하는 코드
 """
 
-original_image_dir = path_finder.tpg_original_dir_path
+original_image_dir = path_finder.tpg_original_directory_path
 
 file_name = "11"
 extension = ".jpg"

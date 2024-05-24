@@ -26,4 +26,4 @@ def delete_files_by_yy(directory, hue):
 
 if __name__ == "__main__":
     # 예시: '/path/to/directory'에서 '05' 값을 가진 파일 삭제
-    delete_files_by_yy(pf.tpg_original_dir_path, '15')
+    delete_files_by_yy(pf.tpg_original_directory_path, '05')

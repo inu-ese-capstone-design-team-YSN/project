@@ -59,7 +59,7 @@ if args.t:
 
 first_image_file_path=f"{pf.tpg_cropped_dir_path}/{upper_image_file_name}{upper_image_extension}"
 second_image_file_path=f"{pf.tpg_cropped_dir_path}/{lower_image_file_name}{lower_image_extension}"
-combined_image_file_path=f"{pf.tpg_combined_dir_path}/{combined_image_file_name}{combined_image_extension}"
+combined_image_file_path=f"{pf.tpg_combined_directory_path}/{combined_image_file_name}{combined_image_extension}"
 
 if comb_type == comb_type_vertically:
     util.combineImagesVertically(first_image_file_path, second_image_file_path, combined_image_file_path)

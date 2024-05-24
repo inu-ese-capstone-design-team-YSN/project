@@ -10,8 +10,8 @@ pf = PathFinder()
 util = ImageUtility()
 
 # 이미지 이름 및 경로 설정 변수
-image_file_name = "example"
-extension = ".jpg"
+image_file_name = "19-3952_1"
+extension = ".png"
 
 # create argument parser
 parser = argparse.ArgumentParser()
@@ -28,8 +28,8 @@ if args.o:
 # TODO 2024.04.18, jdk
 # 현재는 image_path가 /combined로 지정되어 있으므로,
 # 추후에 다른 디렉터리의 이미지에 적용하려면 변경해야 함.
-image_path = f"{pf.tpg_combined_dir_path}/{image_file_name}{extension}"
-hmap_path = f"{pf.tpg_heatmap_dir_path}/{image_file_name}-hmap{extension}"
+image_path = f"{pf.tcx_combined_directory_path}/{image_file_name}{extension}"
+hmap_path = f"{pf.tcx_heatmap_dir_path}/{image_file_name}-hmap{extension}"
 
 util.setImagePathAndOpen(image_path)
 util.calcImageBrightness()

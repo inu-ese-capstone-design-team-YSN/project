@@ -89,7 +89,7 @@ def combine_tpg(tpg_code):
 
             # Image가 combined에 저장되므로, mv가 필요하다.
             # combined_dir에 있는 이미지를 cropped_dir로 이동한다.
-            result = subprocess.run(['mv', f'{pf.tpg_combined_dir_path}/{combined_image_file_name}', f'{pf.tpg_cropped_dir_path}/'], capture_output=True, text=True)
+            result = subprocess.run(['mv', f'{pf.tpg_combined_directory_path}/{combined_image_file_name}', f'{pf.tpg_cropped_dir_path}/'], capture_output=True, text=True)
             
             if result.returncode != 0:
                 raise Exception(result.stderr)
@@ -125,7 +125,7 @@ def combine_tpg(tpg_code):
         try:
             # Image가 combined에 저장되므로, mv가 필요하다.
             # combined_dir에 있는 이미지를 cropped_dir로 이동한다.
-            result = subprocess.run(['mv', f'{pf.tpg_combined_dir_path}/{combined_image_file_name}', f'{pf.tpg_cropped_dir_path}/'], capture_output=True, text=True)
+            result = subprocess.run(['mv', f'{pf.tpg_combined_directory_path}/{combined_image_file_name}', f'{pf.tpg_cropped_dir_path}/'], capture_output=True, text=True)
 
             if result.returncode != 0:
                 raise Exception(result.stderr)
@@ -168,7 +168,7 @@ def get_captured_tpg_codes():
 
     unique_codes = set()
 
-    file_names = os.listdir(pf.tpg_original_dir_path)
+    file_names = os.listdir(pf.tpg_original_directory_path)
 
     for file_name in file_names:
         code = file_name.split('_')[0]

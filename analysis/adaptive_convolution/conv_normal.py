@@ -7,7 +7,7 @@ from path_finder import PathFinder
 pf = PathFinder()
 
 # 이미지 파일 경로 설정 (PathFinder 대신 직접 지정)
-original_image = Image.open(f"{pf.tpg_combined_dir_path}/122_123.jpg")
+original_image = Image.open(f"{pf.tpg_combined_directory_path}/122_123.jpg")
 
 # 이미지를 NumPy 배열로 변환
 image_array = np.array(original_image)

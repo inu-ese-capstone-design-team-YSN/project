@@ -13,7 +13,7 @@ mcu ac 알고리즘 개발
 # PathFinder 인스턴스를 생성하여 디렉토리 경로를 가져옴
 path_finder = PathFinder()
 extension = ".jpg"  # 파일 확장자 설정
-combined_image_dir = path_finder.tpg_combined_dir_path  # TPG 결합 이미지 디렉토리 경로
+combined_image_dir = path_finder.tpg_combined_directory_path  # TPG 결합 이미지 디렉토리 경로
 
 # 이미지 파일 이름과 경로 설정
 image_filename = f"18-6018_combined{extension}"

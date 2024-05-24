@@ -27,7 +27,7 @@ total_right_r = 0
 total_right_g = 0
 total_right_b = 0
 
-original_image_dir = path_finder.tpg_original_dir_path
+original_image_dir = path_finder.tpg_original_directory_path
 
 # 지정된 영역에 대한 좌표
 areas = [

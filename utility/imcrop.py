@@ -37,7 +37,7 @@ if args.name:
 # 촬영된 이미지는 /project/image/swatch_image/original에 저장된다.
 # 따라서, 별도의 path는 지정하지 않고 file의 이름만 argument로 전달받는다.
 # 그리고 crop된 이미지는 역시 /project/image/swatch_image/cropped에 저장된다.
-image_file_path=f"{pf.tpg_original_dir_path}/{image_file_name}{extension}"
+image_file_path=f"{pf.tpg_HC_directory_path}/{image_file_name}{extension}"
 cropped_image_path=f"{pf.tpg_cropped_dir_path}/{image_file_name}_cropped{extension}"
 
 util.setImagePathAndOpen(image_file_path)

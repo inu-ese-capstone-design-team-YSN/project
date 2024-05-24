@@ -18,8 +18,8 @@ standard_g = 211
 standard_b = 217
 results = {}
 
-original_image_dir = path_finder.swatch_original_dir_path
-hue_corrected_image_dir = path_finder.swatch_hue_corrected_dir_path
+original_image_dir = path_finder.swatch_original_directory_path
+hue_corrected_image_dir = path_finder.swatch_HC_directory_path
 
 # 몇 번 이미지부터 몇 번 이미지까지 처리할 것인지 정하는 반복 변수
 start_num = 38

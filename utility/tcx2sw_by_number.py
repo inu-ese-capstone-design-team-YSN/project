@@ -23,7 +23,7 @@ parser.add_argument("--end", type=int, required=True, help="Ending number")
 
 args = parser.parse_args()
 
-extension=".jpg" # 파일 확장자 지정
+extension=".png" # 파일 확장자 지정
 
 comb_type_vetically="v" # 세로 결합 유형 지정
 comb_type_horizontally="h" # 가로 결합 유형 지정

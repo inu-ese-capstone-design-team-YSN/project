@@ -1,6 +1,7 @@
 import numpy as np
 from PIL import Image
 from path_finder import PathFinder
+import cv2
 
 class AdaptiveConvolution:
     
@@ -36,13 +37,24 @@ class AdaptiveConvolution:
     #         brightness_kernel.append(brightness)
     #     return np.array(brightness_kernel)
 
+    def rgb_to_lab(self, rgb):
+        lab = cv2.cvtColor(rgb.astype(np.uint8), cv2.COLOR_RGB2LAB)
+        return lab
+
     def conv(self, kernel):
+        # width, height, _ = kernel.shape
+        # kernel_flattened = kernel.reshape(-1, 3)
+        # # brightness_weight = 0.299 * kernel_flattened[:, 0] + 0.587 * kernel_flattened[:, 1] + 0.114 * kernel_flattened[:, 2]
+        # brightness_weight = 0.333 * kernel_flattened[:, 0] + 0.333 * kernel_flattened[:, 1] + 0.333 * kernel_flattened[:, 2]
+        # brightness_weighted_mean = np.average(kernel_flattened, weights=brightness_weight, axis=0)
+        # return brightness_weighted_mean
+
         width, height, _ = kernel.shape
         kernel_flattened = kernel.reshape(-1, 3)
-        # brightness_weight = 0.299 * kernel_flattened[:, 0] + 0.587 * kernel_flattened[:, 1] + 0.114 * kernel_flattened[:, 2]
-        brightness_weight = 0.333 * kernel_flattened[:, 0] + 0.333 * kernel_flattened[:, 1] + 0.333 * kernel_flattened[:, 2]
-        brightness_weighted_mean = np.average(kernel_flattened, weights=brightness_weight, axis=0)
-        return brightness_weighted_mean
+        lab_values = self.rgb_to_lab(kernel_flattened.reshape((width, height, 3)))
+        luminance = lab_values[:, :, 0].flatten()
+        weighted_mean = np.average(kernel_flattened, weights=luminance, axis=0)
+        return weighted_mean.astype(np.uint8)
 
     # 이미지를 처리하는 함수 정의
     def ProcessImage(self, image_array, n):

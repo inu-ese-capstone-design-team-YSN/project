@@ -320,8 +320,10 @@ def main_loop(stdscr):
                         
                         last_tpg_code = code[1].split('_')[0] if len(code) > 1 and code[1] else "" 
                         image_name = validate_and_format_image_name(stdscr, image_type, last_tpg_code, tpg_count)
-                        file_name = os.path.join(directory, f"{image_name}{image_file_extension}")
-                        
+                        if tpg_count == 1:
+                            file_name = os.path.join(directory, f"{image_name}_1{image_file_extension}")
+                        else:
+                            file_name = os.path.join(directory, f"{image_name}{image_file_extension}")
                         process = subprocess.Popen(preview_command)
                         stdscr.addstr("'0'을 눌러 프리뷰를 종료.\n")
                         stdscr.refresh()

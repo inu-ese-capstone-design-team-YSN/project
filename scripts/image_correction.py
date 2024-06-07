@@ -3,8 +3,6 @@ from hue_correction import HueCorrection
 from fringing_correction import FringingCorrection
 from adaptive_convolution import AdaptiveConvolution
 from brightness_correction import BrightnessCorrection
-import re
-import os
 
 class ImageCorrection:
 ###################################################################################################################
@@ -117,7 +115,7 @@ class ImageCorrection:
 
         # 3) Comb
         print(f"{self.image_file_name} Comb Started...")
-        combined_image = self.image_utility.combineImage(self.mode, self.image_file_name)
+        combined_image = self.image_utility.combineImage(self.mode)
         print(f"{self.image_file_name} Comb Completed...")
 
         # 4) FC
@@ -133,67 +131,17 @@ class ImageCorrection:
         print(f"{self.image_file_name} AC Completed...")
 
         # 6) BC
-        # print(f"{self.image_file_name} BC Started...")
-        # self.brightness_correction.correctBrightness(self.mode, self.image_file_name)
-        # print(f"{self.image_file_name} BC Completed...\n\n\n")
+        print(f"{self.image_file_name} BC Started...")
+        self.brightness_correction.correctBrightness(self.mode, self.image_file_name, reduced_image)
+        print(f"{self.image_file_name} BC Completed...\n\n\n")
 ##########################################################################################################
-
-def get_unique_identifires(directory):
-    # 디렉터리 내의 파일 목록 읽기
-    files = os.listdir(directory)
-    
-    # 정규 표현식으로 파일 이름에서 xx-xxxx 추출
-    # pattern = re.compile(r'^(\d{2}-\d{4})_\d\.png$') # tpg
-    pattern = re.compile(r'^(\d{2}-\d{4}).png$') # tcx
-
-    unique_identifiers = set()
-    
-    for file in files:
-        match = pattern.match(file)
-        if match:
-            identifier = match.group(1)
-            unique_identifiers.add(identifier)
-    
-    return unique_identifiers
-
-def get_unique_identifiers_AC(directory):
-    # 디렉터리 내의 파일 목록 읽기
-    files = os.listdir(directory)
-    
-    # 정규 표현식으로 파일 이름에서 xx-xxxx 추출
-    pattern = re.compile(r'^\d{2}-\d{4}_AC.png$')
-    
-    unique_identifiers = set()
-    
-    for file in files:
-        if pattern.match(file):
-            identifier = file.split('_')[0]
-            unique_identifiers.add(identifier)
-    
-    return unique_identifiers
 
 if __name__ == "__main__":
     image_correction = ImageCorrection()
 
-    # code="19-4245"
-    # image_correction.setMode(mode='TCX')
+    code="99-9997"
 
-    directory_path = "./images/tcx/original"
-    # directory_path = "./images/tcx/original"
-    unique_identifiers = get_unique_identifires(directory_path)
-    print(f"Total Num of Datasets: {len(unique_identifiers)}\n")
-    # print(unique_identifiers)
-
-    image_path = "./images/swatch/AC"
-    # image_path = "./images/tcx/AC2"
-    AC_unique_identifiers = get_unique_identifiers_AC(image_path)
-    print(f"current num of datasets: {len(AC_unique_identifiers)}")
-
-    for code in unique_identifiers:
-        # if code in AC_unique_identifiers:
-        #     print("cont")
-        #     continue
-
-        image_correction.setMode(mode='TCX')
-        image_correction.setImageFileName(image_file_name=code)
-        image_correction.correctImage()
+    # for code in image_correction.tcx_codes:
+    image_correction.setMode(mode='Swatch')
+    image_correction.setImageFileName(image_file_name=code)
+    image_correction.correctImage()

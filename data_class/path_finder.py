@@ -10,17 +10,23 @@ class PathFinder:
         self.image_dir_path = os.path.join(base_dir_path, "image")
         self.images_directory_path = os.path.join(base_dir_path, "images")
         
-        # self.capture_dir_path = os.path.join(base_dir_path, "capture_images")
-
-        # self.capture_original_dir_path = os.path.join(self.capture_dir_path, "original")
-        # self.capture_HB_dir_path = os.path.join(self.capture_dir_path, "outer_balanced")
-        # self.capture_cropped_dir_path = os.path.join(self.capture_dir_path, "cropped")
-        # self.capture_AC_dir_path = os.path.join(self.capture_dir_path, "addaptive_convolution")
-        # self.capture_BB_dir_path = os.path.join(self.capture_dir_path, "brigntness_balanced")
+#-----------------------------------------------------------------------------------------------------------        
         
+        # 메인 프로그램
+        self.capture_dir_path = os.path.join(base_dir_path, "capture_images")
+
+        self.capture_original_1_dir_path = os.path.join(self.capture_dir_path, "original_1")
+        self.capture_original_2_dir_path = os.path.join(self.capture_dir_path, "original_2")
+        self.capture_HB_dir_path = os.path.join(self.capture_dir_path, "hue_balanced")
+        self.capture_comb_dir_path = os.path.join(self.capture_dir_path, "comb")
+        self.capture_AC_dir_path = os.path.join(self.capture_dir_path, "addaptive_convolution")
+        self.capture_BB_dir_path = os.path.join(self.capture_dir_path, "brigntness_balanced")
+        
+        
+#----------------------------------------------------------------------------------------------------------        
         # image의 swatch 이미지 관련 디렉토리
         self.swatch_images_dir_path = os.path.join(self.image_dir_path, "swatch_image")
-        self.swatch_original_directory_path = os.path.join(self.swatch_images_dir_path, "original")  # 원본 이미지 디렉토리
+        self.swatch_original_dir_path = os.path.join(self.swatch_images_dir_path, "original")  # 원본 이미지 디렉토리
         self.swatch_cropped_dir_path = os.path.join(self.swatch_images_dir_path, "cropped")  # 크롭된 이미지 디렉토리
         self.swatch_heatmap_dir_path = os.path.join(self.swatch_images_dir_path, "heatmap")  # 히트맵 이미지 디렉토리
         self.swatch_combined_dir_path = os.path.join(self.swatch_images_dir_path, "combined")  # 결합된 이미지 디렉토리
@@ -29,7 +35,7 @@ class PathFinder:
         
         # image의 TPG 이미지 관련 디렉토리
         self.tpg_image_dir_path = os.path.join(self.image_dir_path, "tpg_image")
-        self.tpg_original_directory_path = os.path.join(self.tpg_image_dir_path, "original")  # 원본 이미지 디렉토리
+        self.tpg_original_dir_path = os.path.join(self.tpg_image_dir_path, "original")  # 원본 이미지 디렉토리
         self.tpg_cropped_dir_path = os.path.join(self.tpg_image_dir_path, "cropped")  # 크롭된 이미지 디렉토리
         self.tpg_heatmap_dir_path = os.path.join(self.tpg_image_dir_path, "heatmap")  # 히트맵 이미지 디렉토리
         self.tpg_combined_dir_path = os.path.join(self.tpg_image_dir_path, "combined")  # 결합된 이미지 디렉토리
@@ -39,7 +45,7 @@ class PathFinder:
 
         # image의 TCX 이미지 관련 디렉토리
         self.tcx_image_dir_path = os.path.join(self.image_dir_path, "tcx_image")
-        self.tcx_original_directory_path = os.path.join(self.tcx_image_dir_path, "original")  # 원본 이미지 디렉토리
+        self.tcx_original_dir_path = os.path.join(self.tcx_image_dir_path, "original")  # 원본 이미지 디렉토리
         self.tcx_heatmap_dir_path = os.path.join(self.tcx_image_dir_path, "heatmap")  # 히트맵 이미지 디렉토리
         self.tcx_combined_dir_path = os.path.join(self.tcx_image_dir_path, "combined")  # 결합된 이미지 디렉토리
         self.tcx_cropped_dir_path = os.path.join(self.tcx_image_dir_path, "cropped")  # 크롭된 이미지 디렉토리
@@ -119,6 +125,6 @@ class PathFinder:
         elif image_type == '2':
             return self.tpg_original_directory_path  # TPG 이미지의 원본 디렉토리를 반환하도록 수정
         elif image_type == '3':
-            return self.tcx_image_dir_path
+            return self.tcx_original_directory_path
         else:
             raise ValueError("Unknown image type")

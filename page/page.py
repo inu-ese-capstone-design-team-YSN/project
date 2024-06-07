@@ -7,6 +7,13 @@ import subprocess
 import cv2
 import os
 from config.configs import Wd_config, Bt_config, Txt_config
+import numpy as np
+import pandas as pd
+import ast
+from path_finder import PathFinder  # 파일 경로를 쉽게 관리하기 위해 사용하는 클래스
+#from function.swatch_capture import CameraCapture
+from scripts.swatch_capture import CameraCapture
+import threading
 
 # Main application frame
 class MainFrame(tk.Frame):
@@ -186,7 +193,7 @@ class AnalysisPage1_0(tk.Toplevel):
         self.main_window.deiconify()  # Restore the previous main window
         self.main_window.lift()
 
-# CI waiting status page
+# CI waiting status page 여기서 실행
 class AnalysisPage1_1(tk.Toplevel):
     """
     Page class for CI waiting status.
@@ -239,22 +246,21 @@ class AnalysisPage1_1(tk.Toplevel):
 
     def run_CI(self):
         """Run the CI process by executing a script."""
-        script_path = os.path.join(os.path.dirname(__file__), "../scripts", "waiting.py")
-        if os.path.exists(script_path):
-            self.process = subprocess.Popen(["python3", script_path], cwd=os.path.dirname(script_path))
-            self.after(100, self.check_process)
-        else:
-            messagebox.showerror("Error", f"Script not found: {script_path}")
+        self.process = CameraCapture().capture_image_mode('1','/home/pi/project/img/IC')
+        self.thread = threading.Thread(target=self.process.run)
+        self.thread.start()
+        self.after(100, self.check_process)
 
     def check_process(self):
         """Check the status of the CI process and handle completion."""
         if self.process.poll() is None:
             self.after(100, self.check_process)
         else:
-            if self.process.returncode == 0:
-                self.analysis_page = AnalysisPage1_2(self, self.main_window, lambda: self.destroy())
+            if self.thread.is_alive():
+                self.after(100, self.check_process)
             else:
-                messagebox.showerror("Error", f"Script failed with return code {self.process.returncode}")
+                self.analysis_page = AnalysisPage1_2(self, self.main_window, lambda: self.destroy())
+
 
 # Feedback page for one sample analysis
 class AnalysisPage1_2(tk.Toplevel):
@@ -281,42 +287,33 @@ class AnalysisPage1_2(tk.Toplevel):
         self.geometry(self.window_config.set_center_position(self))
         
         # Create a large text label for displaying results
-        text_label_1 = tk.Label(self, text="", font=self.txt_config.f12, bg="gray", borderwidth=2, relief="solid", highlightbackground="gray", highlightcolor="gray", highlightthickness=2)
+        text_label_1 = tk.Label(self, text="", font=self.txt_config.f12, borderwidth=2, relief="solid", highlightbackground="gray", highlightcolor="gray", highlightthickness=2)
         text_label_1.place(x=self.txt_config.p_x, y=self.txt_config.p_y, width=self.txt_config.big_size_x, height=self.txt_config.big_size_y)
         
         # Create two middle text labels for displaying images
         text_label_2 = tk.Label(self, text="testing...", font=self.txt_config.f12)
         text_label_2.place(x=self.txt_config.middle1_pos_x, y=self.txt_config.middle1_pos_y, width=self.txt_config.middle1_size_x, height=self.txt_config.middle1_size_y)
-        image = Image.open("img/small_1_cropped_12.jpg")
+        image = Image.open("/home/pi/project/img/IC/1.png")
         image = image.resize((300, 300), Image.Resampling.LANCZOS)
         photo = ImageTk.PhotoImage(image)
         text_label_2.image = photo
         text_label_2.configure(image=photo)
         
-        text_label_3 = tk.Label(self, text="testing...", font=self.txt_config.f12)
-        text_label_3.place(x=self.txt_config.middle2_pos_x, y=self.txt_config.middle2_pos_y, width=self.txt_config.middle2_size_x, height=self.txt_config.middle2_size_y)
-        image = Image.open("result_img/ex.jpg")
-        image = image.resize((300, 300), Image.Resampling.LANCZOS)
-        photo = ImageTk.PhotoImage(image)
-        text_label_3.image = photo
-        text_label_3.configure(image=photo)
+        # Add Lab plot
+        self.add_lab_plot()
         
-        # Create a bottom bar for displaying additional information
-        bottom_bar = tk.Label(self, text="", font=self.txt_config.f12, borderwidth=5, relief="solid")
-        bottom_bar.place(x=self.txt_config.bottom_bar_pos_x, y=self.txt_config.bottom_bar_pos_y, width=self.txt_config.bottom_bar_size_x, height=self.txt_config.bottom_bar_size_y)
-
         # Create labels for displaying color information
         bottom_bar1 = tk.Label(self, text="sRGB:(0,0,0)", font=self.txt_config.f12)
-        bottom_bar1.place(x=self.txt_config.bottom_bar_1_pos_x, y=self.txt_config.bottom_bar_1_pos_y, width=self.txt_config.bottom_bar_1_size_x, height=self.txt_config.bottom_bar_1_size_y)
+        bottom_bar1.place(x=self.txt_config.bb_1_pos_x, y=self.txt_config.bb_1_pos_y-35, width=self.txt_config.bb_1_size_x, height=self.txt_config.bb_1_size_y)
 
         bottom_bar2 = tk.Label(self, text="LAB:(0,0,0)", font=self.txt_config.f12)
-        bottom_bar2.place(x=self.txt_config.bottom_bar_2_pos_x, y=self.txt_config.bottom_bar_2_pos_y, width=self.txt_config.bottom_bar_2_size_x, height=self.txt_config.bottom_bar_2_size_y)
+        bottom_bar2.place(x=self.txt_config.bb_2_pos_x, y=self.txt_config.bb_2_pos_y-35, width=self.txt_config.bb_1_size_x, height=self.txt_config.bb_1_size_y)
 
         bottom_bar3 = tk.Label(self, text="Hex: #000000", font=self.txt_config.f12)
-        bottom_bar3.place(x=self.txt_config.bottom_bar_3_pos_x, y=self.txt_config.bottom_bar_3_pos_y, width=self.txt_config.bottom_bar_3_size_x, height=self.txt_config.bottom_bar_3_size_y)
+        bottom_bar3.place(x=self.txt_config.bb_3_pos_x, y=self.txt_config.bb_3_pos_y-35, width=self.txt_config.bb_1_size_x, height=self.txt_config.bb_1_size_y)
 
         bottom_bar4 = tk.Label(self, text="CMYK: (0,0,0,0)", font=self.txt_config.f12)
-        bottom_bar4.place(x=self.txt_config.bottom_bar_4_pos_x, y=self.txt_config.bottom_bar_4_pos_y, width=self.txt_config.bottom_bar_4_size_x, height=self.txt_config.bottom_bar_4_size_y)
+        bottom_bar4.place(x=self.txt_config.bb_4_pos_x, y=self.txt_config.bb_4_pos_y-35, width=self.txt_config.bb_1_size_x, height=self.txt_config.bb_1_size_y)
 
         # Create buttons for navigation
         home_button = tk.Button(self, text="Home", command=self.go_back)
@@ -325,6 +322,35 @@ class AnalysisPage1_2(tk.Toplevel):
         save_button = tk.Button(self, text="Save", command=self.save_data)
         save_button.place(x=self.txt_config.middle4_pos_x, y=self.txt_config.middle4_pos_y, width=self.txt_config.middle4_size_x, height=self.txt_config.middle4_size_y)    
 
+    def add_lab_plot(self):
+        # Create a figure
+        fig = Figure(figsize=(5, 4), dpi=100)
+        ax = fig.add_subplot(111, projection='3d')
+        
+        # Example Lab data
+        lab_1 = [48, 10.2, -7.1]
+        lab_2 = [48.3, 10.3, -7.2]
+        lab_3 = [47.6, 10.4, -7.3]
+    
+        # Extract L, a, b values
+        L = [lab[0] for lab in [lab_1, lab_2, lab_3]]
+        a = [lab[1] for lab in [lab_1, lab_2, lab_3]]
+        b = [lab[2] for lab in [lab_1, lab_2, lab_3]]
+        
+        # Plotting the Lab data
+        ax.scatter(L, a, b, c='r', marker='o')
+        ax.set_xlabel('L')
+        ax.set_ylabel('a')
+        ax.set_zlabel('b')
+        
+        # Adjust layout
+        fig.subplots_adjust(left=0.1, right=0.8, top=0.9, bottom=0.1)
+        
+        # Create a canvas and add the figure to it
+        canvas = FigureCanvasTkAgg(fig, master=self)
+        canvas.draw()
+        canvas.get_tk_widget().place(x=self.txt_config.middle2_pos_x, y=self.txt_config.middle2_pos_y, width=self.txt_config.middle2_size_x, height=self.txt_config.middle2_size_y)
+ 
     def ready_page(self):
         """Call the ready callback once the page is prepared."""
         if self.ready_callback:
@@ -332,11 +358,10 @@ class AnalysisPage1_2(tk.Toplevel):
 
     def go_back(self):
         """Return to the main screen."""
-        #self.master.destroy()
         self.destroy()  # Close the current window
         self.main_window.deiconify()  # Restore the previous main window
         self.main_window.lift()
-        
+    
     def save_data(self):
         """Save the analysis data."""
         pass
@@ -487,7 +512,7 @@ class AnalysisPage2_1(tk.Toplevel):
         self.main_window.deiconify()  # Restore the previous main window
         self.main_window.lift()
 
-# CI waiting status page for two sample analysis
+# CI waiting status page for two sample analysis 여기서 스크립트 실행
 class AnalysisPage2_2(tk.Toplevel):
     """
     Page class for CI waiting status during similarity analysis between two samples.
@@ -581,50 +606,117 @@ class AnalysisPage2_3(tk.Toplevel):
         # Set initial window position
         self.geometry(self.window_config.set_center_position(self))
         
+        self.Lab_distance = []
+        self.L_distance = []
+        self.a_distance = []
+        self.b_distance = []
+        self.Lab1=[]
+        self.RGB1=[]
+        self.HEX1=[]
+        self.CMYK1=[]
+        self.Lab2=[]
+        self.RGB2=[]
+        self.HEX2=[]
+        self.CMYK2=[]
+        self.idx=0
+        self.load_data()
+        
         # Create a large text label for displaying results
         text_label_1 = tk.Label(self, text="", font=self.txt_config.f12)
         text_label_1.place(x=self.txt_config.p_x, y=self.txt_config.p_y, width=self.txt_config.big_size_x, height=self.txt_config.big_size_y)
-        
-        # Create two middle text labels for displaying images
-        text_label_2 = tk.Label(self, text="testing...", font=self.txt_config.f12)
-        text_label_2.place(x=self.txt_config.middle1_pos_x, y=self.txt_config.middle1_pos_y, width=self.txt_config.middle1_size_x, height=self.txt_config.middle1_size_y)
-        image = Image.open("/home/pi/project/GUI/img/small_1_cropped_11.jpg")
-        image = image.resize((300, 300), Image.Resampling.LANCZOS)
-        photo = ImageTk.PhotoImage(image)
-        text_label_2.image = photo
-        text_label_2.configure(image=photo)
-        
-        text_label_3 = tk.Label(self, text="testing...", font=self.txt_config.f12)
-        text_label_3.place(x=self.txt_config.middle2_pos_x, y=self.txt_config.middle2_pos_y, width=self.txt_config.middle2_size_x, height=self.txt_config.middle2_size_y)
-        image = Image.open("/home/pi/project/GUI/result_img/ex.jpg")
-        image = image.resize((300, 300), Image.Resampling.LANCZOS)
-        photo = ImageTk.PhotoImage(image)
-        text_label_3.image = photo
-        text_label_3.configure(image=photo)
-        
-        # Create a bottom bar for displaying additional information
-        bottom_bar = tk.Label(self, text="", font=self.txt_config.f12, borderwidth=5, relief="solid")
-        bottom_bar.place(x=self.txt_config.bottom_bar_pos_x, y=self.txt_config.bottom_bar_pos_y, width=self.txt_config.bottom_bar_size_x, height=self.txt_config.bottom_bar_size_y)
+       
+        # create info name container
+        info1_name_container = tk.Label(self, text="First Sample", font=self.txt_config.f10, borderwidth=1, relief="solid")
+        info1_name_container.place(x=self.txt_config.info1_name_pos_x, y=self.txt_config.info1_name_pos_y, width=self.txt_config.info1_name_size_x, height=self.txt_config.info1_name_size_y)
+        info2_name_container = tk.Label(self, text="Second Sample", font=self.txt_config.f10, borderwidth=1, relief="solid")
+        info2_name_container.place(x=self.txt_config.info2_name_pos_x, y=self.txt_config.info2_name_pos_y, width=self.txt_config.info2_name_size_x, height=self.txt_config.info2_name_size_y)
 
         # Create labels for displaying color information
-        bottom_bar1 = tk.Label(self, text="sRGB:(0,0,0)", font=self.txt_config.f12)
-        bottom_bar1.place(x=self.txt_config.bottom_bar_1_pos_x, y=self.txt_config.bottom_bar_1_pos_y, width=self.txt_config.bottom_bar_1_size_x, height=self.txt_config.bottom_bar_1_size_y)
+        self.bottom_bar1 = tk.Label(self, text=f"RGB {self.RGB1[self.idx]}", font=self.txt_config.f10)
+        self.bottom_bar1.place(x=self.txt_config.bottom_bar_1_pos_x, y=self.txt_config.bottom_bar_1_pos_y, width=self.txt_config.bottom_bar_1_size_x, height=self.txt_config.bottom_bar_1_size_y)
 
-        bottom_bar2 = tk.Label(self, text="LAB:(0,0,0)", font=self.txt_config.f12)
-        bottom_bar2.place(x=self.txt_config.bottom_bar_2_pos_x, y=self.txt_config.bottom_bar_2_pos_y, width=self.txt_config.bottom_bar_2_size_x, height=self.txt_config.bottom_bar_2_size_y)
+        self.bottom_bar2 = tk.Label(self, text=f"LAB {self.Lab1[self.idx]}", font=self.txt_config.f10)
+        self.bottom_bar2.place(x=self.txt_config.bottom_bar_1_pos_x+self.txt_config.bottom_bar_1_size_x, y=self.txt_config.bottom_bar_2_pos_y, width=self.txt_config.bottom_bar_2_size_x, height=self.txt_config.bottom_bar_2_size_y)
 
-        bottom_bar3 = tk.Label(self, text="Hex: #000000", font=self.txt_config.f12)
-        bottom_bar3.place(x=self.txt_config.bottom_bar_3_pos_x, y=self.txt_config.bottom_bar_3_pos_y, width=self.txt_config.bottom_bar_3_size_x, height=self.txt_config.bottom_bar_3_size_y)
+        self.bottom_bar3 = tk.Label(self, text=f"HEX {self.HEX1[self.idx]}", font=self.txt_config.f10)
+        self.bottom_bar3.place(x=self.txt_config.bottom_bar_3_pos_x, y=self.txt_config.bottom_bar_3_pos_y, width=self.txt_config.bottom_bar_3_size_x, height=self.txt_config.bottom_bar_3_size_y)
 
-        bottom_bar4 = tk.Label(self, text="CMYK: (0,0,0,0)", font=self.txt_config.f12)
-        bottom_bar4.place(x=self.txt_config.bottom_bar_4_pos_x, y=self.txt_config.bottom_bar_4_pos_y, width=self.txt_config.bottom_bar_4_size_x, height=self.txt_config.bottom_bar_4_size_y)
+        self.bottom_bar4 = tk.Label(self, text=f"CMYK {self.CMYK1[self.idx]}", font=self.txt_config.f10)
+        self.bottom_bar4.place(x=self.txt_config.bottom_bar_3_pos_x+self.txt_config.bottom_bar_3_size_x, y=self.txt_config.bottom_bar_4_pos_y, width=self.txt_config.bottom_bar_4_size_x, height=self.txt_config.bottom_bar_4_size_y)
+        
+        # Create labels for displaying color information
+        self.bottom_bar2_1 = tk.Label(self, text=f"RGB {self.RGB2[self.idx]}", font=self.txt_config.f10)
+        self.bottom_bar2_1.place(x=self.txt_config.bottom_bar_2_pos_x, y=self.txt_config.bottom_bar_1_pos_y, width=self.txt_config.bottom_bar_1_size_x, height=self.txt_config.bottom_bar_1_size_y)
 
+        self.bottom_bar2_2 = tk.Label(self, text=f"LAB {self.Lab2[self.idx]}", font=self.txt_config.f10)
+        self.bottom_bar2_2.place(x=self.txt_config.bottom_bar_2_pos_x+self.txt_config.bottom_bar_2_size_x, y=self.txt_config.bottom_bar_2_pos_y, width=self.txt_config.bottom_bar_2_size_x, height=self.txt_config.bottom_bar_2_size_y)
+
+        self.bottom_bar2_3 = tk.Label(self, text=f"HEX {self.HEX2[self.idx]}", font=self.txt_config.f10)
+        self.bottom_bar2_3.place(x=self.txt_config.bottom_bar_4_pos_x, y=self.txt_config.bottom_bar_3_pos_y, width=self.txt_config.bottom_bar_3_size_x, height=self.txt_config.bottom_bar_3_size_y)
+
+        self.bottom_bar2_4 = tk.Label(self, text=f"CMYK {self.CMYK2[self.idx]}", font=self.txt_config.f10)
+        self.bottom_bar2_4.place(x=self.txt_config.bottom_bar_4_pos_x+self.txt_config.bottom_bar_4_size_x, y=self.txt_config.bottom_bar_4_pos_y, width=self.txt_config.bottom_bar_4_size_x, height=self.txt_config.bottom_bar_4_size_y)
+
+        self.add_lab_plot()
+        
+        # show diffrence
+        self.diff_label = tk.Label(self, text=f"ΔE : {self.Lab_distance[self.idx]}  ΔL : {self.L_distance[self.idx]}\n\nΔa : {self.a_distance[self.idx]}  Δb : {self.b_distance[self.idx]}", font=self.txt_config.f16)
+        self.diff_label.place(x=self.txt_config.middle1_pos_x+self.txt_config.middle1_size_x+60, y=self.txt_config.middle1_pos_y+180, width=self.txt_config.middle1_size_x, height=self.txt_config.middle1_size_y-200)
+
+        # Create two middle labels for displaying images
+        self.image_dir1 = "result_img/sample1"
+        self.image_files1 = sorted(os.listdir(self.image_dir1))
+        self.image_dir2 = "result_img/sample2"
+        self.image_files2 = sorted(os.listdir(self.image_dir2))
+        self.current_image_index = 0
+        
+        
+        self.image_label_1 = tk.Label(self, text="img1", font=self.txt_config.f12)
+        self.image_label_1.place(x=self.txt_config.middle1_pos_x+self.txt_config.middle1_size_x+60+10, y=self.txt_config.middle1_pos_y+20, width=self.txt_config.middle3_size_x, height=self.txt_config.middle3_size_y)
+        
+        self.image_label_2 = tk.Label(self, text="img2", font=self.txt_config.f12)
+        self.image_label_2.place(x=self.txt_config.middle1_pos_x+self.txt_config.middle1_size_x+60+self.txt_config.middle3_size_x+20, y=self.txt_config.middle1_pos_y+20, width=self.txt_config.middle3_size_x, height=self.txt_config.middle3_size_y)
+        
+        self.show_image()
+        
         # Create buttons for navigation
         home_button = tk.Button(self, text="Home", command=self.go_back)
-        home_button.place(x=self.txt_config.middle3_pos_x, y=self.txt_config.middle3_pos_y, width=self.txt_config.middle3_size_x, height=self.txt_config.middle3_size_y)
+        home_button.place(x=self.txt_config.middle3_pos_x+2*self.txt_config.ip_x, y=self.txt_config.middle3_pos_y, width=self.txt_config.middle3_size_x, height=self.txt_config.middle3_size_y)
 
-        save_button = tk.Button(self, text="Save", command=self.save_data)
-        save_button.place(x=self.txt_config.middle4_pos_x, y=self.txt_config.middle4_pos_y, width=self.txt_config.middle4_size_x, height=self.txt_config.middle4_size_y)    
+        next_color_button = tk.Button(self, text="Next Color", command=self.next_color)
+        next_color_button.place(x=self.txt_config.middle4_pos_x+2*self.txt_config.ip_x, y=self.txt_config.middle4_pos_y, width=self.txt_config.middle4_size_x, height=self.txt_config.middle4_size_y)    
+
+    def add_lab_plot(self):
+        # Create a figure
+        fig = Figure(figsize=(5, 4), dpi=100)
+        ax = fig.add_subplot(111, projection='3d')
+        
+        # Extract L, a, b values
+        L = [lab[0] for lab in [self.Lab1[self.idx], self.Lab2[self.idx]]]
+        a = [lab[1] for lab in [self.Lab1[self.idx], self.Lab2[self.idx]]]
+        b = [lab[2] for lab in [self.Lab1[self.idx], self.Lab2[self.idx]]]
+        RGB1=self.parse_array_string(self.RGB1[self.idx])
+        RGB2=self.parse_array_string(self.RGB2[self.idx])
+        rgb_1 = [c / 255.0 for c in RGB1]
+        rgb_2 = [c / 255.0 for c in RGB2]
+        # Plotting the Lab data
+        ax.scatter(L[0], a[0], b[0], c=[rgb_1], marker='o')
+        ax.scatter(L[1], a[1], b[1], c=[rgb_2], marker='o')
+        # Plotting the vertical lines and bottom points
+        # for l, a_val, b_val in zip(L, a, b):
+        #     ax.plot([l, l], [a_val, a_val], [0, b_val], color='r', linestyle='dashed')
+        #     ax.scatter([l], [a_val], [0], c='r', marker='o')
+        ax.set_xlabel('L')
+        ax.set_ylabel('a')
+        ax.set_zlabel('b')
+        
+        # Adjust layout
+        fig.subplots_adjust(left=0.1, right=0.8, top=0.9, bottom=0.1)
+        
+        # Create a canvas and add the figure to it
+        canvas = FigureCanvasTkAgg(fig, master=self)
+        canvas.draw()
+        canvas.get_tk_widget().place(x=self.txt_config.middle1_pos_x, y=self.txt_config.middle1_pos_y, width=self.txt_config.middle1_size_x+60, height=self.txt_config.middle1_size_y+40)
 
     def ready_page(self):
         """Call the ready callback once the page is prepared."""
@@ -636,10 +728,65 @@ class AnalysisPage2_3(tk.Toplevel):
         self.destroy()  # Close the current window
         self.main_window.deiconify()  # Restore the previous main window
         self.main_window.lift()
+    
+    def parse_array_string(self,array_str):
+        """문자열을 파싱하여 리스트로 변환"""
+        array_str = array_str.replace(' ', ',')  # 공백을 쉼표로 대체
+        return ast.literal_eval(array_str)
+
+    def load_data(self):
+        """Load the analysis data."""
+        df = pd.read_csv("output_data/analysis.csv")
+        for index, row in df.iterrows():
+            self.RGB1.append(row['RGB_1'])
+            self.HEX1.append(row['HEX_1'])
+            self.CMYK1.append(row['CMYK_1'])
+            self.RGB2.append(row['RGB_2'])
+            self.HEX2.append(row['HEX_2'])
+            self.CMYK2.append(row['CMYK_2'])
+            self.Lab_distance.append(float(row['Lab_distance']))
+            self.Lab1.append(self.parse_array_string(row['Lab_1']))
+            self.Lab2.append(self.parse_array_string(row['Lab_2']))
+            Lab1 = self.parse_array_string(row['Lab_1'])
+            Lab2 = self.parse_array_string(row['Lab_2'])
+            dL = Lab1[0] - Lab2[0]
+            da = Lab1[1] - Lab2[1]
+            db = Lab1[2] - Lab2[2]
+            self.L_distance.append(round(dL,2))
+            self.a_distance.append(round(da,2))
+            self.b_distance.append(round(db,2))
         
-    def save_data(self):
+    def show_image(self):
+        image_path1 = os.path.join(self.image_dir1, self.image_files1[self.idx])
+        image_path2 = os.path.join(self.image_dir2, self.image_files2[self.idx])
+        self.image1 = Image.open(image_path1)
+        self.image1 = self.image1.resize((300, 300), Image.Resampling.LANCZOS)
+        self.photo1 = ImageTk.PhotoImage(self.image1)
+        self.image_label_1.configure(image=self.photo1)
+        self.image_label_1.image = self.photo1
+        
+        self.image2 = Image.open(image_path2)
+        self.image2 = self.image2.resize((300, 300), Image.Resampling.LANCZOS)
+        self.photo2 = ImageTk.PhotoImage(self.image2)
+        self.image_label_2.configure(image=self.photo2)
+        self.image_label_2.image = self.photo2
+    
+    def next_color(self):
         """Save the analysis data."""
-        pass
+        self.idx += 1
+        if self.idx >= len(self.Lab1):
+            self.idx = 0
+        self.bottom_bar1.config(text=f"RGB {self.RGB1[self.idx]}", font=self.txt_config.f10)
+        self.bottom_bar2.config(text=f"LAB {self.Lab1[self.idx]}", font=self.txt_config.f10)
+        self.bottom_bar3.config(text=f"HEX {self.HEX1[self.idx]}", font=self.txt_config.f10)
+        self.bottom_bar4.config(text=f"CMYK {self.CMYK1[self.idx]}", font=self.txt_config.f10)
+        self.bottom_bar2_1.config(text=f"RGB {self.RGB2[self.idx]}", font=self.txt_config.f10)
+        self.bottom_bar2_2.config(text=f"LAB {self.Lab2[self.idx]}", font=self.txt_config.f10)
+        self.bottom_bar2_3.config(text=f"HEX {self.HEX2[self.idx]}", font=self.txt_config.f10)
+        self.bottom_bar2_4.config(text=f"CMYK {self.CMYK2[self.idx]}", font=self.txt_config.f10)
+        self.diff_label.config(text=f"ΔE : {self.Lab_distance[self.idx]}  ΔL : {self.L_distance[self.idx]}\n\nΔa : {self.a_distance[self.idx]}  Δb : {self.b_distance[self.idx]}", font=self.txt_config.f16)
+        self.add_lab_plot()
+        self.show_image()
 
 # Image view page (temp)
 class ImagePage(tk.Toplevel):

@@ -18,9 +18,9 @@ def convert_to_grayscale_heatmap(image_path, output_path):
     print(f"Heatmap saved at: {output_path}")
 
 # 이미지 경로
-image_path = "./images/tcx/BC/19-3952_BC.png"
+image_path = "/home/pi/project/images/swatch/BC/99-9997_BC.png"
 # image_path = "./image/15-1262_combined.png"
-output_path = "./19-3952_BC_heatmap.png"
+output_path = "/home/pi/project/images/swatch/HC/99-9997_BC.png"
 
 convert_to_grayscale_heatmap(image_path, output_path)
 

@@ -41,8 +41,3 @@ class CameraCapture:
         
         # image_2 촬영
         image_path_2 = self.capture_image_mode(self.image_2, self.output_dir_2)
-
-# 사용 예시
-if __name__ == "__main__":
-    camera = CameraCapture()
-    camera.capture_image()

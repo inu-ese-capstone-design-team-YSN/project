@@ -129,9 +129,13 @@ class Txt_config:
         self.ip_y = int(10)
         
         # Font
+        self.f24 = ("Arial", 24)
+        self.f20 = ("Arial", 20)
         self.f16 = ("Arial", 16)
         self.f12 = ("Arial", 12)
+        self.f10 = ("Arial", 10)
         self.f8 = ("Arial", 8)
+        self.f4 = ("Arial", 4)
         
         # size
         self.size_x = int(680)
@@ -150,16 +154,24 @@ class Txt_config:
         #info container
         self.bottom_bar_size_x = int(740)
         self.bottom_bar_size_y = int(130)
+        #info name container
+        self.info1_name_size_x = int(self.bottom_bar_size_x/2)
+        self.info1_name_size_y = int(self.bottom_bar_size_y/4)
+        self.info2_name_size_x = int(self.bottom_bar_size_x/2)
+        self.info2_name_size_y = int(self.bottom_bar_size_y/4)
         
         #color info
-        self.bottom_bar_1_size_x = int(self.bottom_bar_size_x/2)
-        self.bottom_bar_1_size_y = int(self.bottom_bar_size_y/2)
-        self.bottom_bar_2_size_x = int(self.bottom_bar_size_x/2)
-        self.bottom_bar_2_size_y = int(self.bottom_bar_size_y/2)
-        self.bottom_bar_3_size_x = int(self.bottom_bar_size_x/2)
-        self.bottom_bar_3_size_y = int(self.bottom_bar_size_y/2)
-        self.bottom_bar_4_size_x = int(self.bottom_bar_size_x/2)
-        self.bottom_bar_4_size_y = int(self.bottom_bar_size_y/2)
+        self.bb_1_size_x = int(self.bottom_bar_size_x/2)
+        self.bb_1_size_y = int(self.bottom_bar_size_y/2)
+        
+        self.bottom_bar_1_size_x = int(self.bottom_bar_size_x/4)
+        self.bottom_bar_1_size_y = int(self.bottom_bar_size_y/4)
+        self.bottom_bar_2_size_x = int(self.bottom_bar_size_x/4)
+        self.bottom_bar_2_size_y = int(self.bottom_bar_size_y/4)
+        self.bottom_bar_3_size_x = int(self.bottom_bar_size_x/4)
+        self.bottom_bar_3_size_y = int(self.bottom_bar_size_y/4)
+        self.bottom_bar_4_size_x = int(self.bottom_bar_size_x/4)
+        self.bottom_bar_4_size_y = int(self.bottom_bar_size_y/4)
         
         # position
         self.pos_x = int(100)
@@ -176,13 +188,28 @@ class Txt_config:
         self.middle4_pos_y = int(self.middle3_pos_y+self.middle3_size_y+self.ip_y)
         
         self.bottom_bar_pos_x = int(self.p_x+self.ip_x)
-        self.bottom_bar_pos_y = int(self.p_y+self.middle2_size_y+2*self.ip_y)
+        self.bottom_bar_pos_y = int(self.p_y+self.middle2_size_y+4*self.ip_y)
+        
+        self.bb_1_pos_x = int(self.bottom_bar_pos_x)
+        self.bb_1_pos_y = int(self.bottom_bar_pos_y+self.ip_y)
+        self.bb_2_pos_x = int(self.bb_1_pos_x+self.bb_1_size_x)
+        self.bb_2_pos_y = int(self.bb_1_pos_y)
+        self.bb_3_pos_x = int(self.bb_1_pos_x)
+        self.bb_3_pos_y = int(self.bb_1_pos_y+self.bb_1_size_y+self.ip_y)
+        self.bb_4_pos_x = int(self.bb_1_pos_x+self.bb_1_size_x)
+        self.bb_4_pos_y = int(self.bb_1_pos_y+self.bb_1_size_y+self.ip_y)
         
         self.bottom_bar_1_pos_x = int(self.bottom_bar_pos_x)
-        self.bottom_bar_1_pos_y = int(self.bottom_bar_pos_y)
-        self.bottom_bar_2_pos_x = int(self.bottom_bar_pos_x+self.bottom_bar_1_size_x)
-        self.bottom_bar_2_pos_y = int(self.bottom_bar_pos_y)
+        self.bottom_bar_1_pos_y = int(self.bottom_bar_pos_y+5*self.ip_y)
+        self.bottom_bar_2_pos_x = int(self.bottom_bar_pos_x+2*self.bottom_bar_1_size_x)
+        self.bottom_bar_2_pos_y = int(self.bottom_bar_pos_y+5*self.ip_y)
         self.bottom_bar_3_pos_x = int(self.bottom_bar_pos_x)
-        self.bottom_bar_3_pos_y = int(self.bottom_bar_pos_y+self.bottom_bar_1_size_y)
-        self.bottom_bar_4_pos_x = int(self.bottom_bar_pos_x+self.bottom_bar_1_size_x)
-        self.bottom_bar_4_pos_y = int(self.bottom_bar_pos_y+self.bottom_bar_1_size_y)
+        self.bottom_bar_3_pos_y = int(self.bottom_bar_pos_y+self.bottom_bar_1_size_y+5*self.ip_y)
+        self.bottom_bar_4_pos_x = int(self.bottom_bar_pos_x+2*self.bottom_bar_1_size_x)
+        self.bottom_bar_4_pos_y = int(self.bottom_bar_pos_y+self.bottom_bar_1_size_y+5*self.ip_y)
+        
+        self.info1_name_pos_x = int(self.p_x+self.ip_x)
+        self.info1_name_pos_y = int(self.p_y+self.middle2_size_y+5*self.ip_y)
+        self.info2_name_pos_x = int(self.info1_name_pos_x+self.info1_name_size_x)
+        self.info2_name_pos_y = int(self.p_y+self.middle2_size_y+5*self.ip_y)
+        

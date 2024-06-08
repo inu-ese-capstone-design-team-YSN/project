@@ -104,19 +104,20 @@ class ImageCorrection:
 
         # 1) HC
         # mode와 image_file_name을 전달하고 보정을 진행한다. 보정 결과는 정해진 디렉터리에 저장된다.
-        print(f"{self.image_file_name} HC Started...")
+        # print(f"{self.image_file_name} HC Started...")
+        print(f"image file name: {self.image_file_name}")
         hue_corrected_images = self.hue_correction.correctHue(self.mode, self.image_file_name) 
-        print(f"{self.image_file_name} HC Completed...")
+        # print(f"{self.image_file_name} HC Completed...")
 
         # 2) Crop
-        print(f"{self.image_file_name} Crop Started...")
+        # print(f"{self.image_file_name} Crop Started...")
         self.image_utility.cropImage(self.mode, hue_corrected_images)
-        print(f"{self.image_file_name} Crop Completed...")
+        # print(f"{self.image_file_name} Crop Completed...")
 
         # 3) Comb
-        print(f"{self.image_file_name} Comb Started...")
+        # print(f"{self.image_file_name} Comb Started...")
         combined_image = self.image_utility.combineImage(self.mode)
-        print(f"{self.image_file_name} Comb Completed...")
+        # print(f"{self.image_file_name} Comb Completed...")
 
         # 4) FC
         if self.mode == 'TPG':
@@ -126,14 +127,14 @@ class ImageCorrection:
             print(f"{self.image_file_name} FC Completed...")
 
         # 5) AC
-        print(f"{self.image_file_name} AC Started...")
-        reduced_image = self.adaptive_convolution.doAdaptiveConvolution(self.mode, combined_image, self.image_file_name)
-        print(f"{self.image_file_name} AC Completed...")
+        # print(f"{self.image_file_name} AC Started...")
+        self.adaptive_convolution.doAdaptiveConvolution(self.mode, combined_image, self.image_file_name)
+        # print(f"{self.image_file_name} AC Completed...")
 
         # 6) BC
-        print(f"{self.image_file_name} BC Started...")
-        self.brightness_correction.correctBrightness(self.mode, self.image_file_name, reduced_image)
-        print(f"{self.image_file_name} BC Completed...\n\n\n")
+        # print(f"{self.image_file_name} BC Started...")
+        # self.brightness_correction.correctBrightness(self.mode, self.image_file_name, reduced_image)
+        # print(f"{self.image_file_name} BC Completed...\n\n\n")
 ##########################################################################################################
 
 if __name__ == "__main__":

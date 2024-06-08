@@ -134,8 +134,18 @@ class HueCorrection:
             # HB_image.save(f"{self.TPG_hue_balanced_dir}/{TPG_file_name}_HC{self.extension}")
 
     def correctImageSwatch(self, file_name):
+
+        print(f"cur filename : {file_name}")
+
+        base_path = None
+
+        if file_name == "image_1" or file_name == "image_2":
+            base_path = self.path_finder.capture_SM_dir_path
+        elif file_name == "image":
+            base_path = self.path_finder.capture_CI_dir_path
+
         # 이미지를 불러오기
-        original_image = Image.open(f'{self.swatch_original_dir}/{file_name}{self.extension}')
+        original_image = Image.open(f'{base_path}/{file_name}{self.extension}')
         total_r_mean, total_g_mean, total_b_mean = self.calculateRGBMeans(original_image)
         print(total_r_mean, total_g_mean, total_b_mean)
         # image를 np array로 변환

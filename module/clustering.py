@@ -5,17 +5,18 @@ from mpl_toolkits.mplot3d import Axes3D
 from sklearn.cluster import DBSCAN
 from collections import Counter
 from PIL import Image
+from path_finder import PathFinder
 import cv2
 
 class Clustering:
-    def __init__(self, file_path, eps=3, min_samples=300):
+    def __init__(self, eps=3, min_samples=300):
         """
         파일 경로, eps, 및 min_samples로 Clustering 초기화
         :param file_path: 이미지 파일 경로
         :param eps: DBSCAN의 두 샘플 간 최대 거리
         :param min_samples: 코어 포인트로 간주되기 위한 이웃 샘플의 수
         """
-        self.file_path = file_path
+
         self.eps = eps
         self.min_samples = min_samples
         self.img = None
@@ -24,18 +25,33 @@ class Clustering:
         self.unique_labels = None # 고유 Label을 담는 변수
         self.cluster_centers = None # 각 cluster의 대표 색상(평균)
         self.inpated_images = [] # inpaint를 수행한 image 객체를 담는 list
+        self.image_file_name = None
+        self.path_finder = PathFinder()
+
+    def setImageFileName(self, image_file_name):
+        self.image_file_name = image_file_name
 
     def load_image(self):
         """
         이미지를 로드 및 RGB 변환 시각화
         """
-        self.img = Image.open(self.file_path)  # 이미지 로드
+
+        base_path = None
+
+        if self.image_file_name == "image_1" or self.image_file_name == "image_2":
+            base_path = self.path_finder.capture_SM_dir_path
+        elif self.image_file_name == "image":
+            base_path = self.path_finder.capture_CI_dir_path
+
+        file_path = f"{base_path}/{self.image_file_name}.png"
+
+        self.img = Image.open(file_path)  # 이미지 로드
         self.img = self.img.convert("RGB")  # PNG 이미지를 RGBA에서 RGB로 변환
         self.img = np.array(self.img)  # 이미지를 numpy 배열로 변환
 
         # 로드된 이미지를 시각화
-        plt.imshow(self.img)
-        plt.show()
+        # plt.imshow(self.img)
+        # plt.show()
 
     def extract_colors(self):
         """
@@ -57,37 +73,37 @@ class Clustering:
         # 고유 클러스터 레이블 가져오기
         self.unique_labels = set(self.labels)
 
-        # 클러스터를 위한 색상 팔레트 생성
-        colors = [plt.cm.Spectral(each) for each in np.linspace(0, 1, len(self.unique_labels))]
+        # # 클러스터를 위한 색상 팔레트 생성
+        # colors = [plt.cm.Spectral(each) for each in np.linspace(0, 1, len(self.unique_labels))]
 
-        # 각 클러스터 색상 플로팅
-        plt.figure(figsize=(6, 6))
-        plt.subplots_adjust(left=0, right=1, top=0.95, bottom=0, hspace=0.3, wspace=0.3)
-        plt.suptitle("Clustered Colors", fontsize=10)
-        num_cols = 2  # 한 행에 표시할 색상 수
+        # # 각 클러스터 색상 플로팅
+        # plt.figure(figsize=(6, 6))
+        # plt.subplots_adjust(left=0, right=1, top=0.95, bottom=0, hspace=0.3, wspace=0.3)
+        # plt.suptitle("Clustered Colors", fontsize=10)
+        # num_cols = 2  # 한 행에 표시할 색상 수
 
-        for i, k in enumerate(self.unique_labels):
-            if k == -1:
-                continue  # 노이즈 건너뛰기 (레이블 -1)
+        # for i, k in enumerate(self.unique_labels):
+        #     if k == -1:
+        #         continue  # 노이즈 건너뛰기 (레이블 -1)
 
-            # 각 클러스터의 픽셀 RGB 값 가져오기
-            cluster_rgb = self.color_tbl[self.labels == k]
+        #     # 각 클러스터의 픽셀 RGB 값 가져오기
+        #     cluster_rgb = self.color_tbl[self.labels == k]
 
-            # 대표 색상 계산
-            representative_color = np.mean(cluster_rgb, axis=0)
+        #     # 대표 색상 계산
+        #     representative_color = np.mean(cluster_rgb, axis=0)
 
-            # 대표 색상 표시
-            plt.subplot(len(self.unique_labels) // num_cols + 1, num_cols, i + 1)
-            cluster_color = np.full((10, 10, 3), representative_color, dtype=int)
-            plt.imshow(cluster_color)
-            plt.axis('off')
-            plt.title(f"Cluster {k} RGB: {representative_color.astype(int)}", fontsize=6)
+        #     # 대표 색상 표시
+        #     plt.subplot(len(self.unique_labels) // num_cols + 1, num_cols, i + 1)
+        #     cluster_color = np.full((10, 10, 3), representative_color, dtype=int)
+        #     plt.imshow(cluster_color)
+        #     plt.axis('off')
+        #     plt.title(f"Cluster {k} RGB: {representative_color.astype(int)}", fontsize=6)
 
-        plt.tight_layout()
-        plt.show()
+        # plt.tight_layout()
+        # plt.show()
 
-        # 3D 그래프 생성
-        self.plot_cluster_colors_3d(self.color_tbl, self.labels)
+        # # 3D 그래프 생성
+        # self.plot_cluster_colors_3d(self.color_tbl, self.labels)
 
     def plot_cluster_colors_3d(self, colors, labels):
         plt.ion()  # 인터랙티브 모드 켜기
@@ -168,11 +184,11 @@ class Clustering:
             segmented_image[color_mask] = self.img[color_mask]
 
             # 클러스터 이미지 표시
-            plt.figure(figsize=(5, 5))
-            plt.imshow(segmented_image)
-            plt.title(f"Cluster {label} RGB: {color.astype(int)} - Pixel_Size: {cluster_size}")
-            plt.axis('off')
-            plt.show()
+            # plt.figure(figsize=(5, 5))
+            # plt.imshow(segmented_image)
+            # plt.title(f"Cluster {label} RGB: {color.astype(int)} - Pixel_Size: {cluster_size}")
+            # plt.axis('off')
+            # plt.show()
 
         return cluster_image, sorted_cluster_labels, cluster_sizes_without_noise
 
@@ -184,16 +200,16 @@ class Clustering:
         :param cluster_sizes_without_noise: 클러스터 크기 (노이즈 제외)
         """
         grid_size = 100  # 그리드에 표시할 이미지 크기
-        output_dir = "/home/pi/project/cluster_list"  # 절대 경로 사용
+        output_dir = self.path_finder.capture_SM_clusters_dir_path  # 절대 경로 사용
         
         # cluster_list 디렉토리를 비움
-        if os.path.exists(output_dir):
-            for file in os.listdir(output_dir):
-                file_path = os.path.join(output_dir, file)
-                if os.path.isfile(file_path):
-                    os.unlink(file_path)
+        # if os.path.exists(output_dir):
+        #     for file in os.listdir(output_dir):
+        #         file_path = os.path.join(output_dir, file)
+        #         if os.path.isfile(file_path):
+        #             os.unlink(file_path)
         
-        os.makedirs(output_dir, exist_ok=True)  # 저장 디렉토리 생성
+        #  os.makedirs(output_dir, exist_ok=True)  # 저장 디렉토리 생성
 
         for label in sorted_cluster_labels:
             cluster_size = cluster_sizes_without_noise[label]  # 클러스터 크기
@@ -237,33 +253,16 @@ class Clustering:
                 grid_image[row, col] = pixel_value
 
             # 그리드 이미지 저장
-            file_path = os.path.join(output_dir, f'cluster_{label}.png')
+            file_path = os.path.join(output_dir, f'{self.image_file_name}_{label}.png')
             plt.imsave(file_path, grid_image.astype(np.uint8))
 
             # 디버깅 출력 추가
-            print(f"Saving cluster grid image {label} to {file_path}")
+            # print(f"Saving cluster grid image {label} to {file_path}")
 
             # 저장된 이미지 크기 확인
-            saved_image = Image.open(file_path)
-            print(f"Saved image size for cluster {label}: {saved_image.size}")
+            # saved_image = Image.open(file_path)
+            # print(f"Saved image size for cluster {label}: {saved_image.size}")
 
             # 그리드 이미지 출력 (필요시 활성화)
-            plt.imshow(grid_image)
-            plt.show()
-
-# AC 이미지 
-file_path = os.path.join("/home/pi/project/ac_list/00-0001.png")
-
-image_cluster = Clustering(file_path)
-# 이미지 로드
-image_cluster.load_image()
-# 이미지에서 색상 추출
-image_cluster.extract_colors()
-# 색상을 클러스터링하고 클러스터 표시
-image_cluster.cluster_colors()  
-
-# 클러스터 크기 계산 및 각 클러스터 표시
-cluster_image, sorted_cluster_labels, cluster_sizes_without_noise = image_cluster.calculate_cluster_sizes()  
-
-# 픽셀 처리 그리드 이미지 변환
-image_cluster.pixel_grid_images(cluster_image, sorted_cluster_labels, cluster_sizes_without_noise)
+            # plt.imshow(grid_image)
+            # plt.show()

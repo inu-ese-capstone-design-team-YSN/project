@@ -41,12 +41,12 @@ class ImageUtility:
 
         self.clearCroppedImageLists()
 
-        if mode == 'Swatch':
-            from_dir_path = self.pf.swatch_HC_directory_path
-        elif mode == 'TPG':
-            from_dir_path = self.pf.tpg_HC_directory_path
-        elif mode == 'TCX':
-            from_dir_path = self.pf.tcx_HC_directory_path
+        # if mode == 'Swatch':
+        #     from_dir_path = self.pf.swatch_HC_directory_path
+        # elif mode == 'TPG':
+        #     from_dir_path = self.pf.tpg_HC_directory_path
+        # elif mode == 'TCX':
+        #     from_dir_path = self.pf.tcx_HC_directory_path
         
         if mode in ['Swatch', 'TCX']:
             # image_path = f"{from_dir_path}/{image_file_name}_HC.png"

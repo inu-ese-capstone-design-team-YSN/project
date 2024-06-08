@@ -14,9 +14,15 @@ class PathFinder:
         
         # 메인 프로그램
         self.capture_dir_path = os.path.join(base_dir_path, "capture_images")
+        self.img_dir_path = os.path.join(base_dir_path, "img")
+        self.model_dir_path = os.path.join(base_dir_path, "model")
+        self.result_data_dir_path = os.path.join(base_dir_path, "result_data")
+        self.result_img_dir_path = os.path.join(base_dir_path, "result_dir")
 
-        self.capture_original_1_dir_path = os.path.join(self.capture_dir_path, "original_1")
-        self.capture_original_2_dir_path = os.path.join(self.capture_dir_path, "original_2")
+        self.capture_SM_dir_path = os.path.join(self.img_dir_path, "SM")
+        self.capture_CI_dir_path = os.path.join(self.img_dir_path, "CI")
+        self.capture_SM_clusters_dir_path = os.path.join(self.img_dir_path, "SM_clusters")
+        
         self.capture_HB_dir_path = os.path.join(self.capture_dir_path, "hue_balanced")
         self.capture_comb_dir_path = os.path.join(self.capture_dir_path, "comb")
         self.capture_AC_dir_path = os.path.join(self.capture_dir_path, "addaptive_convolution")

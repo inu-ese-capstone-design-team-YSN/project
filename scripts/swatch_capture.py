@@ -37,7 +37,12 @@ class CameraCapture:
 
     def capture_image(self):
         # image_1 촬영
-        image_path_1 = self.capture_image_mode(self.image_1, self.output_dir_1)
+        image_path_1 = self.capture_image_mode('1','/home/pi/project/img/IC')
         
         # image_2 촬영
-        image_path_2 = self.capture_image_mode(self.image_2, self.output_dir_2)
+        #image_path_2 = self.capture_image_mode(self.image_2, self.output_dir_2)
+        
+        
+if __name__ == "__main__":
+    camera = CameraCapture()
+    camera.capture_image()

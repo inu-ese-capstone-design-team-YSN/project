@@ -93,6 +93,11 @@ class AdaptiveConvolution:
         # MCU 크기 설정
         n = 5
 
+        if image_file_name == "image_1" or image_file_name == "image_2":
+            base_path = self.path_finder.capture_SM_dir_path
+        elif image_file_name == "image":
+            base_path = self.path_finder.capture_CI_dir_path
+
         # 첫 번째 MCU 과정 (RGB)
         first_pass_image_array_rgb = self.ProcessImage(image_array, n)
         # 두 번째 MCU 과정 (RGB)
@@ -101,16 +106,14 @@ class AdaptiveConvolution:
         new_image_rgb = Image.fromarray(second_pass_image_array_rgb, mode='RGB')
 
         if mode == 'TPG':
-            new_image_rgb.save(f"{self.tpg_adaptive_convolution_image_dir}/{image_file_name}_AC{self.extension}")
+            new_image_rgb.save(f"{self.tpg_adaptive_convolution_image_dir}/{image_file_name}{self.extension}")
             print(f"{image_file_name}_FC{self.extension} AC 보정 완료")
         elif mode == 'TCX':
-            new_image_rgb.save(f"{self.tcx_adaptive_convolution_image_dir}/{image_file_name}_AC{self.extension}")
+            new_image_rgb.save(f"{self.tcx_adaptive_convolution_image_dir}/{image_file_name}{self.extension}")
             print(f"{image_file_name}_comb{self.extension} AC 보정 완료")
         elif mode == 'Swatch':
-            new_image_rgb.save(f"{self.swatch_adaptive_convolution_image_dir}/{image_file_name}_AC{self.extension}")
-            print(f"{image_file_name}_comb{self.extension} AC 보정 완료")
-
-        return new_image_rgb
+            new_image_rgb.save(f"{base_path}/{image_file_name}{self.extension}")
+            # print(f"{image_file_name}_comb{self.extension} AC 보정 완료")
 
             
             
